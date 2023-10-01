@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "pkg-info",
+  "description": "A package information descriptor.",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "github-release"
+      ]
+    },
+    "latest_version": {
+      "type": "string"
+    },
+    "versions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "$ref": "#/definitions/arch"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "filename": {
+              "type": "string"
+            },
+            "download_url": {
+              "$ref": "#/definitions/url"
+            },
+            "digest": {
+              "$ref": "#/definitions/digest"
+            }
+          },
+          "required": [
+            "filename",
+            "download_url",
+            "digest"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "repository_path": {
+      "description": "Github mode repository path",
+      "type": "string",
+      "pattern": "^\\w+/\\w+$",
+      "examples": [
+        "gohugoio/hugo"
+      ]
+    },
+    "arch_asset_patterns": {
+      "description": "Github asset patterns",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/definitions/arch"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/regex"
+      }
+    }
+  },
+  "if": {
+    "properties": {
+      "mode": {
+        "const": "github-release"
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "repository_path",
+      "arch_asset_patterns"
+    ]
+  },
+  "required": [
+    "name",
+    "mode"
+  ],
+  "definitions": {
+    "arch": {
+      "type": "string",
+      "enum": [
+        "arm64",
+        "amd64"
+      ]
+    },
+    "regex": {
+      "type": "string",
+      "format": "regex"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "digest": {
+      "type": "string",
+      "oneOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "pattern": "^sha512:[0-9a-f]{128}$"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

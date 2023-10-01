@@ -1,0 +1,10 @@
+{
+  "$schema": "../../pkg-info.schema.json",
+  "name": "Gohugo",
+  "mode": "github-release",
+  "repository_path": "gohugoio/hugo",
+  "arch_asset_patterns": {
+    "amd64": "^hugo_([0-9]+(\\.[0-9]+)+)_linux-amd64.tar.gz$",
+    "arm64": "^hugo_([0-9]+(\\.[0-9]+)+)_linux-arm64.tar.gz$"
+  }
+}
