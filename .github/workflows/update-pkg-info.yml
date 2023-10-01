@@ -1,0 +1,67 @@
+name: Update pkg_info
+
+on:
+  workflow_call:
+    inputs:
+      pkg-info-path:
+        type: string
+        description: Path to the `pkg_info.json` file.
+        default: pkg_info.json
+      repo-type:
+        type: string
+        description: The reposiroty type of the wrapped service.
+        default: github
+
+jobs:
+  update:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Checkout workflow repostorty to access utility scripts
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        with:
+          ref: ${{ github.job_workflow_sha }}
+          repository: FirelightFlagboy/gh-actions-workflows-docker-services
+          path: gh-actions-workflows-docker-services
+
+      - name: Update ${{ inputs.pkg-info-path }}
+        run: >-
+          python gh-actions-workflows-docker-services/pkg-info-updater.py
+          --file=${{ inputs.pkg-info-path }}
+          --repo-type=${{ inputs.repo-type }}
+          --tmp-dir=${{ runner.temp }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Pkg info
+        id: meta
+        run: |
+          (
+            echo "latest-version=$(jq -r .latest ${{ inputs.pkg-info-path }})"
+            echo "repo=$(jq -r .repository ${{ inputs.pkg-info-path }})"
+          ) | tee -a $GITHUB_OUTPUT
+
+      - name: Check if ${{ inputs.pkg-info-path }} was modified
+        id: commit
+        uses: stefanzweifel/git-auto-commit-action@3d1b5e078a85df99db0cb2441cd4309b09d86253
+        with:
+          branch: Bump/${{ steps.meta.outputs.repo }}/${{ steps.meta.outputs.latest-version }}
+          commit_message: Bump ${{ steps.meta.outputs.repo }} to ${{ steps.meta.outputs.latest-version }}
+          commit_options: --signoff
+          file_pattern: ${{ inputs.pkg-info-path }}
+          create_branch: ${{ github.event_name != 'pull_request' }}
+
+      - name: Create a pull-request if ${{ inputs.pkg-info-path }} was modified
+        if: github.event_name != 'pull_request' && steps.commit.outputs.changes_detected == 'true'
+        run: |
+          BRANCH_NAME='Bump/${{ steps.meta.outputs.repo }}/${{ steps.meta.outputs.latest-version }}'
+
+          echo "pkg-info was modified, the branch ${BRANCH_NAME} was created with the commit ${{ steps.commit.outputs.commit_hash }}"
+          gh pr create --fill --head ${BRANCH_NAME}
+        env:
+          GH_TOKEN: ${{ github.token }}
