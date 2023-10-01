@@ -1,0 +1,25 @@
+{
+  "$schema": "../../pkg-info.schema.json",
+  "name": "Gohugo",
+  "latest_version": "v0.119.0",
+  "versions": {
+    "v0.119.0": {
+      "amd64": {
+        "filename": "hugo_0.119.0_linux-amd64.tar.gz",
+        "download_url": "https://github.com/gohugoio/hugo/releases/download/v0.119.0/hugo_0.119.0_linux-amd64.tar.gz",
+        "digest": "sha512:01781c4162da4788a98b5d704222ca007ad020dbe3dfbdc18858ee2eafa115ba2792593370a905aa7c8f2a9f07170721f2de44fca191b29dc01f1108ea1af631"
+      },
+      "arm64": {
+        "filename": "hugo_0.119.0_linux-arm64.tar.gz",
+        "download_url": "https://github.com/gohugoio/hugo/releases/download/v0.119.0/hugo_0.119.0_linux-arm64.tar.gz",
+        "digest": "sha512:18db0f2d55ec94eb8555af16964d40863c60aaa89498a45d50c4644cc9b018a46744a323d1ce7f4af59b0c0bd665a97d5b212c231f7f368e3ac5ac81aa9a55ec"
+      }
+    }
+  },
+  "mode": "github-release",
+  "repository_path": "gohugoio/hugo",
+  "arch_asset_patterns": {
+    "amd64": "^hugo_([0-9]+(\\.[0-9]+)+)_linux-amd64.tar.gz$",
+    "arm64": "^hugo_([0-9]+(\\.[0-9]+)+)_linux-arm64.tar.gz$"
+  }
+}

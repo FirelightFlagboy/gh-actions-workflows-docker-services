@@ -1,0 +1,52 @@
+name: Rust
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src
+      - tests
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - .github/workflows/rust.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - src
+      - tests
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - .github/workflows/rust.yml
+
+env:
+  RUSTFLAGS: -D warnings
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        timeout-minutes: 2
+
+      - name: Setup rust cache
+        uses: Swatinem/rust-cache@578b235f6e5f613f7727f1c17bd3305b4d4d4e1f # v2.6.1
+        timeout-minutes: 5
+
+      - name: Check format
+        run: cargo fmt --check
+        timeout-minutes: 2
+
+      - name: Build test
+        run: cargo build --tests --workspace
+        timeout-minutes: 5
+
+      - name: Run clippy
+        run: cargo clippy --workspace
+        timeout-minutes: 5
+
+      - name: Run test
+        run: cargo test --workspace
+        timeout-minutes: 5
