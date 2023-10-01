@@ -1,0 +1,55 @@
+name: Update pkg_info
+
+on:
+  workflow_call:
+    inputs:
+      pkg-info-path:
+        type: string
+        description: Path to the `pkg_info.json` file.
+        default: pkg_info.json
+      repo-type:
+        type: string
+        description: The reposiroty type of the wrapped service.
+        default: github
+
+jobs:
+  update:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Checkout workflow repostorty to access utility scripts
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        with:
+          ref: ${{ github.job_workflow_sha }}
+          repository: FirelightFlagboy/gh-actions-workflows-docker-services
+          path: gh-actions-workflows-docker-services
+
+      - name: Update ${{ inputs.pkg-info-path }}
+        run: >-
+          python gh-actions-workflows-docker-services/pkg-info-updater.py
+          --file=${{ inputs.pkg-info-path }}
+          --repo-type=${{ inputs.repo-type }}
+          --tmp-dir=${{ runner.temp }}
+
+      - name: Check if ${{ inputs.pkg-info-path }} was modified
+        id: modified
+        run: |
+          if git status --porcelain ${{ inputs.pkg-info-path }} | grep -q 'M ${{ inputs.pkg-info-path }}'; then
+            echo "${{ inputs.pkg-info-path }} was modified"
+            echo "modified=true" | tee -a $GITHUB_OUTPUT
+          else
+            echo "${{ inputs.pkg-info-path }} was not modified"
+            echo "modified=false" | tee -a $GITHUB_OUTPUTx
+          fi
+
+      - name: Create a pull-request if ${{ inputs.pkg-info-path }} was modified
+        if: github.event_name != 'pull_request' && steps.modified.outputs.modified == 'true'
+        run: |
+          LATEST_VERSION=$(jq -r .latest ${{ inputs.pkg-info-path }})
+          REPO=$(jq -r .repository ${{ inputs.pkg-info-path }})
+          git switch --create "Bump/${REPO}/${LASTEST_VERSION}"
+          git add ${{ inputs.pkg-info-path }}
+          git commit --mesage="Bump ${REPO} to ${LASTEST_VERSION}"
+          gh pr create --fill
