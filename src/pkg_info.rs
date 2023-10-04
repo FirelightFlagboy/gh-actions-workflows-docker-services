@@ -10,7 +10,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-pub use mode::{GithubReleaseHandler, Mode, ModeGetLatestVersion};
+pub use mode::{BashCmdReleaseHandler, GithubReleaseHandler, Mode, ModeGetLatestVersion};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PkgInfo<'a> {
@@ -68,6 +68,14 @@ impl<'a> FromIterator<(Arch, VersionedArchEntry<'a>)> for Version<'a> {
     }
 }
 
+impl<'a> Deref for Version<'a> {
+    type Target = HashMap<Arch, VersionedArchEntry<'a>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy, Hash, PartialOrd, Ord)]
 #[serde(rename_all = "lowercase")]
 pub enum Arch {
@@ -101,6 +109,15 @@ pub enum Digest<'a> {
     Sha512(Cow<'a, str>),
     #[serde(borrow)]
     Sha256(Cow<'a, str>),
+}
+
+impl<'a> Digest<'a> {
+    pub fn to_owned(&self) -> Digest<'static> {
+        match self {
+            Digest::Sha512(v) => Digest::Sha512(Cow::Owned(v.to_string())),
+            Digest::Sha256(v) => Digest::Sha256(Cow::Owned(v.to_string())),
+        }
+    }
 }
 
 impl<'a> TryFrom<&'a str> for Digest<'a> {

@@ -4,7 +4,8 @@ use regex::Regex;
 use rstest::rstest;
 
 use pkg_info_update::{
-    Arch, Digest, GithubReleaseHandler, PkgInfo, PkgInfoBase, PkgInfoMode, VersionedArchEntry,
+    Arch, BashCmdReleaseHandler, Digest, GithubReleaseHandler, PkgInfo, PkgInfoBase, PkgInfoMode,
+    VersionedArchEntry,
 };
 
 #[rstest]
@@ -22,6 +23,15 @@ use pkg_info_update::{
                 (Arch::Amd64, Regex::new("^hugo_([0-9]+(\\.[0-9]+)+)_linux-amd64.tar.gz$").unwrap()),
                 (Arch::Arm64, Regex::new("^hugo_([0-9]+(\\.[0-9]+)+)_linux-arm64.tar.gz$").unwrap())
             ].into_iter().collect()
+        })
+    }
+)]
+#[case::minimal_bash_command(
+    std::include_str!("samples/minimal-bash-command.json"),
+    PkgInfo {
+        base: PkgInfoBase { name: "Foobar", latest_version: None, versions: None },
+        mode: PkgInfoMode::BashCommand(BashCmdReleaseHandler {
+            command: Cow::Borrowed(r#"echo '{ "version": "0.1.0", "assets": { "amd64": { "filename": "foobar", "download_url": "https://google.com", "digest": "sha256:e8bf04349572f90e569c5bd46be3f7101e1e289125adb8b9eaba94badba1c43a" } } }'"#)
         })
     }
 )]
