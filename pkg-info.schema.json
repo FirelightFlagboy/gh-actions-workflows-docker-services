@@ -12,7 +12,8 @@
     "mode": {
       "type": "string",
       "enum": [
-        "github-release"
+        "github-release",
+        "bash-command"
       ]
     },
     "latest_version": {
@@ -64,6 +65,9 @@
       "additionalProperties": {
         "$ref": "#/definitions/regex"
       }
+    },
+    "command": {
+      "type": "string"
     }
   },
   "if": {
@@ -78,6 +82,20 @@
       "repository_path",
       "arch_asset_patterns"
     ]
+  },
+  "else": {
+    "if": {
+      "properties": {
+        "mode": {
+          "const": "bash-command"
+        }
+      }
+    },
+    "then": {
+      "required": [
+        "command"
+      ]
+    }
   },
   "required": [
     "name",
