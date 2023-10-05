@@ -23,6 +23,13 @@
         "download_url": "https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/releases/download/v1.0.1/pkg-info-updater-linux-amd64",
         "digest": "sha512:f4432cc13f933153583b014cdefcc1875e865bde6a47d37a7ff76bb139310468d2694f8b3bbc88219f19e04770806a63acaa3f151a1610bdd5e0e5a29f974f02"
       }
+    },
+    "1.0.2": {
+      "amd64": {
+        "filename": "pkg-info-updater-linux-amd64",
+        "download_url": "https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/releases/download/v1.0.2/pkg-info-updater-linux-amd64",
+        "digest": "sha512:0aa8e3cd339232a44a5912504cde0c06b8030bb63a980f4d095fa6e0a3b25d8733a693c0fd417bbd496f28267374f5a1d11178cde1adf0a65a074069bbad4f1d"
+      }
     }
   },
   "mode": "github-release",
