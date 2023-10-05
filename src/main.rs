@@ -39,7 +39,9 @@ fn main() -> anyhow::Result<()> {
     *versions.entry(Cow::Borrowed(&version)).or_default() = content;
 
     let raw_dump_data = serde_json::to_string_pretty(&pkg_info).context("Serializing the data")?;
-    std::fs::write(&args.file, raw_dump_data).context("Writing back the data")?;
+    std::fs::write(&args.file, raw_dump_data)
+        .and_then(|_| std::fs::write(&args.file, b"\n"))
+        .context("Writing back the data")?;
     Ok(())
 }
 
