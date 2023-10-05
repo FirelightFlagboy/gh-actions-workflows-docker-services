@@ -17,7 +17,7 @@ use std::{
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-use crate::{ModeGetLatestVersion, VersionedArchEntry};
+use crate::ModeGetLatestVersion;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -57,35 +57,8 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
             self.command
         );
 
-        let stdout =
-            String::from_utf8(output.stdout).context("Output contain invalid utf-8 char")?;
-        let output =
-            serde_json::from_str::<CommandVersionInfo>(&stdout).context("Fail to parsed output")?;
+        let res = super::external_cmd::process_output(output);
 
-        Ok(Box::pin(futures::future::ready(Ok((
-            output.version.to_string(),
-            output
-                .assets
-                .iter()
-                .map(|(k, v)| {
-                    (
-                        *k,
-                        VersionedArchEntry {
-                            filename: Cow::Owned(v.filename.to_string()),
-                            download_url: v.download_url.clone(),
-                            digest: v.digest.to_owned(),
-                        },
-                    )
-                })
-                .collect(),
-        )))))
+        Ok(Box::pin(futures::future::ready(res)))
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct CommandVersionInfo<'a> {
-    #[serde(borrow)]
-    version: &'a str,
-    #[serde(borrow)]
-    assets: crate::pkg_info::Version<'a>,
 }

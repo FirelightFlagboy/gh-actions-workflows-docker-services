@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::HashMap, fmt::Debug, ops::Deref, path::Path,
 
 use anyhow::Context;
 use futures::Future;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, ACCEPT, AUTHORIZATION, USER_AGENT};
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION};
 use serde::{Deserialize, Serialize};
 
 use crate::pkg_info::{Arch, Digest, Version, VersionedArchEntry};
@@ -27,10 +27,9 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
         let tmp_dir = tmp_dir.to_path_buf();
         let github_token = std::env::var("GITHUB_TOKEN")
             .context("Cannot retrieve github token from env value `GITHUB_TOKEN`")?;
+        let http_client = build_http_client(&github_token)?;
 
         Ok(Box::pin(async move {
-            let http_client = build_http_client(&github_token)?;
-
             log::info!("Fetching latest release ...");
             let raw_body = get_raw_latest_release(&http_client, &repository_path).await?;
             if in_test_mode {
@@ -69,10 +68,8 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
 }
 
 fn build_http_client(github_token: &str) -> anyhow::Result<reqwest::Client> {
-    reqwest::Client::builder()
+    crate::reqwest_utils::prepare_http_client_json()
         .default_headers(HeaderMap::from_iter([
-            (USER_AGENT, HeaderValue::from_static("pkg-info-updater")),
-            (ACCEPT, HeaderValue::from_static("application/json")),
             (
                 AUTHORIZATION,
                 format!("Bearer {github_token}")
@@ -84,7 +81,6 @@ fn build_http_client(github_token: &str) -> anyhow::Result<reqwest::Client> {
                 HeaderValue::from_static("2022-11-28"),
             ),
         ]))
-        .gzip(true)
         .build()
         .context("Failed to build HTTP client")
 }
