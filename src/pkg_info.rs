@@ -24,6 +24,8 @@ pub struct PkgInfo<'a> {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Base<'a> {
+    #[serde(borrow, rename = "$schema", skip_serializing_if = "Option::is_none")]
+    pub schema: Option<&'a str>,
     #[serde(borrow)]
     pub name: &'a str,
     #[serde(borrow, skip_serializing_if = "Option::is_none")]
