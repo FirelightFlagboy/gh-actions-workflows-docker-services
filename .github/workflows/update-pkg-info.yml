@@ -81,13 +81,18 @@ jobs:
 
       - name: Check if ${{ inputs.pkg-info-path }} was modified
         id: commit
+        if: github.event_name != 'pull_request'
         uses: stefanzweifel/git-auto-commit-action@10944650cd54362ae9200814cbb06c657132951d
         with:
           branch: Bump/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.version }}
           commit_message: Bump ${{ steps.meta.outputs.name }} to ${{ steps.meta.outputs.version }}
           commit_options: --signoff
           file_pattern: ${{ inputs.pkg-info-path }}
-          create_branch: ${{ github.event_name != 'pull_request' }}
+          create_branch: true
+
+      - name: "Fallback: Check if ${{ inputs.pkg-info-path }} was modified"
+        if: github.event_name == 'pull_request'
+        run: git status
 
       - name: Create a pull-request if ${{ inputs.pkg-info-path }} was modified
         if: github.event_name != 'pull_request' && steps.commit.outputs.changes_detected == 'true'
