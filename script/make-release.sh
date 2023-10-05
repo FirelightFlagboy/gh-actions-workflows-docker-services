@@ -20,7 +20,7 @@ TEMP_FILE=$(mktemp)
 trap "[ -f $TEMP_FILE ] && rm -f $TEMP_FILE" EXIT INT
 
 jq \
-  ".versions[\"$NEW_VERSION\"] = {\"$ARCH\":{\"filename\":\"$FILENAME\",\"download_url\":\"$DOWNLOAD_URL\",\"digest\":\"sha512:$SHA512SUM\"}}" \
+  ".versions[\"$NEW_VERSION\"] = {\"$ARCH\":{\"filename\":\"$FILENAME\",\"download_url\":\"$DOWNLOAD_URL\",\"digest\":\"sha512:$SHA512SUM\"}} | .latest_version = \"$NEW_VERSION\"" \
   pkg-info.json > $TEMP_FILE
 
 mv $TEMP_FILE pkg-info.json
