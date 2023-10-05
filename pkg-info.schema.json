@@ -6,56 +6,6 @@
     "$schema": {
       "type": "string"
     },
-    "name": {
-      "type": "string"
-    },
-    "mode": {
-      "type": "string",
-      "enum": [
-        "github-release",
-        "bash-command"
-      ]
-    },
-    "latest_version": {
-      "type": "string"
-    },
-    "versions": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "propertyNames": {
-          "$ref": "#/definitions/arch"
-        },
-        "additionalProperties": {
-          "type": "object",
-          "properties": {
-            "filename": {
-              "type": "string"
-            },
-            "download_url": {
-              "$ref": "#/definitions/url"
-            },
-            "digest": {
-              "$ref": "#/definitions/digest"
-            }
-          },
-          "required": [
-            "filename",
-            "download_url",
-            "digest"
-          ],
-          "additionalProperties": false
-        }
-      }
-    },
-    "repository_path": {
-      "description": "Github mode repository path",
-      "type": "string",
-      "pattern": "^\\w+/\\w+$",
-      "examples": [
-        "gohugoio/hugo"
-      ]
-    },
     "arch_asset_patterns": {
       "description": "Github asset patterns",
       "type": "object",
@@ -68,6 +18,63 @@
     },
     "command": {
       "type": "string"
+    },
+    "document-url": {
+      "$ref": "#/definitions/url"
+    },
+    "latest_version": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "github-release",
+        "bash-command",
+        "jq-script"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "repository_path": {
+      "description": "Github mode repository path",
+      "type": "string",
+      "pattern": "^\\w+/\\w+$",
+      "examples": [
+        "gohugoio/hugo"
+      ]
+    },
+    "script-path": {
+      "$ref": "#/definitions/path"
+    },
+    "versions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "$ref": "#/definitions/arch"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "digest": {
+              "$ref": "#/definitions/digest"
+            },
+            "download_url": {
+              "$ref": "#/definitions/url"
+            },
+            "filename": {
+              "$ref": "#/definitions/path"
+            }
+          },
+          "required": [
+            "filename",
+            "download_url",
+            "digest"
+          ],
+          "additionalProperties": false
+        }
+      }
     }
   },
   "if": {
@@ -109,14 +116,6 @@
         "amd64"
       ]
     },
-    "regex": {
-      "type": "string",
-      "format": "regex"
-    },
-    "url": {
-      "type": "string",
-      "format": "uri"
-    },
     "digest": {
       "type": "string",
       "oneOf": [
@@ -127,6 +126,18 @@
           "pattern": "^sha512:[0-9a-f]{128}$"
         }
       ]
+    },
+    "path": {
+      "type": "string",
+      "format": "path"
+    },
+    "regex": {
+      "type": "string",
+      "format": "regex"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
     }
   },
   "additionalProperties": false
