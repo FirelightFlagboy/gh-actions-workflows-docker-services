@@ -39,7 +39,7 @@
     "repository_path": {
       "description": "Github mode repository path",
       "type": "string",
-      "pattern": "^\\w+/\\w+$",
+      "pattern": "^[\\w-]+/[\\w-]+$",
       "examples": [
         "gohugoio/hugo"
       ]
