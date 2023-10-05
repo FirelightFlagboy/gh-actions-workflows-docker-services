@@ -3,7 +3,7 @@ use std::{borrow::Cow, path::PathBuf};
 use anyhow::Context;
 use clap::Parser;
 
-use pkg_info_update::PkgInfo;
+use pkg_info_updater::PkgInfo;
 
 #[derive(Debug, Parser)]
 struct Args {

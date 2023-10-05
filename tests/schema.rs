@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use regex::Regex;
 use rstest::rstest;
 
-use pkg_info_update::{
+use pkg_info_updater::{
     Arch, BashCmdReleaseHandler, Digest, GithubReleaseHandler, JqScriptReleaseHandler, PkgInfo,
     PkgInfoBase, PkgInfoMode, VersionedArchEntry,
 };
