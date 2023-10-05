@@ -1,4 +1,7 @@
-use std::{borrow::Cow, path::PathBuf};
+use std::{
+    borrow::Cow,
+    path::{Path, PathBuf},
+};
 
 use anyhow::Context;
 use clap::Parser;
@@ -39,8 +42,8 @@ fn main() -> anyhow::Result<()> {
     *versions.entry(Cow::Borrowed(&version)).or_default() = content;
 
     let raw_dump_data = serde_json::to_string_pretty(&pkg_info).context("Serializing the data")?;
-    std::fs::write(&args.file, raw_dump_data).context("Writing back the data")?;
-    Ok(())
+
+    dump_data_to_file(&args.file, raw_dump_data.as_bytes())
 }
 
 fn init_log() {
@@ -49,4 +52,20 @@ fn init_log() {
     const DEFAULT_FILTER: &str = "debug,reqwest=warn";
 
     Builder::from_env(Env::default().default_filter_or(DEFAULT_FILTER)).init();
+}
+
+fn dump_data_to_file(file: &Path, data: &[u8]) -> anyhow::Result<()> {
+    use std::{
+        fs::File,
+        io::{BufWriter, IoSlice, Write},
+    };
+
+    let file = File::create(file).context("Cannot open pkg info file")?;
+    let mut buf_writer = BufWriter::new(file);
+
+    buf_writer
+        .write_vectored(&[IoSlice::new(data), IoSlice::new(b"\n")])
+        .context("Failed to write data to file")?;
+
+    Ok(())
 }
