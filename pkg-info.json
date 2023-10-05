@@ -1,0 +1,18 @@
+{
+  "$schema": "./pkg-info.schema.json",
+  "name": "Pkg Updater",
+  "latest_version": "0.0.2",
+  "versions": {
+    "0.0.2": {
+      "amd64": {
+        "filename": "pkg-info-update-linux-amd64",
+        "download_url": "https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/releases/download/v0.0.2/pkg-info-updater-linux-amd64",
+        "digest": "sha512:14fd6039bfb4fb3dac779811b97bb4fea5ac80264cecb09dfef79f9418bcc261682348c3aacb5f8324545407fc6c212d32452bd24b592d5524c0f58836c7b5ee"
+      }
+    }
+  },
+  "mode": "github-release",
+  "arch_asset_patterns": {
+    "amd64": "^.*-linux-amd64$"
+  }
+}
