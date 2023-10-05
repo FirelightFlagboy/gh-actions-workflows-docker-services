@@ -1,4 +1,5 @@
 {
+  "$schema": "../../pkg-info.schema.json",
   "name": "Sonarr",
   "mode": "jq-script",
   "document-url": "https://services.sonarr.tv/v1/releases",
