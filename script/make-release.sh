@@ -32,10 +32,12 @@ git tag --sign "v$NEW_VERSION" --message="Release version $NEW_VERSION"
 
 git push --atomic origin main "v$NEW_VERSION"
 
+cp target/release/pkg-info-updater /tmp/pkg-info-updater-$OS-$ARCH
+
 gh release create "v$NEW_VERSION" \
   --title "$NEW_VERSION" \
   --draft \
   --generate-notes \
   --latest \
   --verify-tag \
-  "target/release/pkg-info-updater#pkg-info-updater-$OS-$ARCH"
+  "/tmp/pkg-info-updater-$OS-$ARCH"
