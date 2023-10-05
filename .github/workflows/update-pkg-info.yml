@@ -5,8 +5,8 @@ on:
     inputs:
       pkg-info-path:
         type: string
-        description: Path to the `pkg_info.json` file.
-        default: pkg_info.json
+        description: Path to the `pkg-info.json` file.
+        default: pkg-info.json
       repo-type:
         type: string
         description: The reposiroty type of the wrapped service.
@@ -22,36 +22,69 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
+      - name: Retrieve called workflow ref
+        id: workflow
+        run: |
+          set -o pipefail -eu
+          src_workflow_ref='${{ github.workflow_ref }}'
+          echo src_workflow_ref=$src_workflow_ref
+          src_workflow_path=$(echo ${src_workflow_ref#'${{ github.repository }}/'} | cut -d@ -f1)
+          echo src_workflow_path=$src_workflow_path
+          echo workflow_ref=$( \
+            grep -e \
+              'FirelightFlagboy/gh-actions-workflows-docker-services/.github/workflows/update-pkg-info.yml@.*' \
+              $src_workflow_path \
+              | cut -d@ -f2 \
+          ) | tee -a $GITHUB_OUTPUT
+
       - name: Checkout workflow repostorty to access utility scripts
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
-          ref: ${{ github.job_workflow_sha }}
+          ref: ${{ steps.workflow.outputs.workflow_ref }}
           repository: FirelightFlagboy/gh-actions-workflows-docker-services
           path: gh-actions-workflows-docker-services
+          sparse-checkout: |
+            pkg-info.json |
+            extract-pkg-info-latest-version.jq
+
+      - name: Parse pkg-info-updater pkg-info
+        id: pkg
+        run: |
+          set -o pipefail
+          jq --raw-output --from-file extract-pkg-info-latest-version.jq pkg-info.json | tee -a $GITHUB_OUTPUT
+        working-directory: gh-actions-workflows-docker-services
+
+      - name: Download pkg-info-updater
+        run: |
+          wget -O ${{ steps.pkg.outputs.filename }} ${{ steps.pkg.outputs.download_url }}
+          echo "${{ steps.pkg.outputs.sha512 }} ${{ steps.pkg.outputs.filename }}" > pkg-info-updater.sha512
+          sha512sum -c pkg-info-updater.sha512
+          chmod +x ${{ steps.pkg.outputs.filename }}
+        working-directory: ${{ runner.temp }}
 
       - name: Update ${{ inputs.pkg-info-path }}
         run: >-
-          python gh-actions-workflows-docker-services/pkg-info-updater.py
+          ${{ runner.temp }}/${{ steps.pkg.outputs.filename }}
           --file=${{ inputs.pkg-info-path }}
-          --repo-type=${{ inputs.repo-type }}
           --tmp-dir=${{ runner.temp }}
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Pkg info
         id: meta
         run: |
-          (
-            echo "latest-version=$(jq -r .latest ${{ inputs.pkg-info-path }})"
-            echo "repo=$(jq -r .repository ${{ inputs.pkg-info-path }})"
-          ) | tee -a $GITHUB_OUTPUT
+          set -o pipefail
+          jq --raw-output \
+            --from-file gh-actions-workflows-docker-services/extract-pkg-info-latest-version.jq \
+            ${{ inputs.pkg-info-path }} \
+            | tee -a $GITHUB_OUTPUT
 
       - name: Check if ${{ inputs.pkg-info-path }} was modified
         id: commit
         uses: stefanzweifel/git-auto-commit-action@10944650cd54362ae9200814cbb06c657132951d
         with:
-          branch: Bump/${{ steps.meta.outputs.repo }}/${{ steps.meta.outputs.latest-version }}
-          commit_message: Bump ${{ steps.meta.outputs.repo }} to ${{ steps.meta.outputs.latest-version }}
+          branch: Bump/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.version }}
+          commit_message: Bump ${{ steps.meta.outputs.name }} to ${{ steps.meta.outputs.version }}
           commit_options: --signoff
           file_pattern: ${{ inputs.pkg-info-path }}
           create_branch: ${{ github.event_name != 'pull_request' }}
@@ -59,7 +92,7 @@ jobs:
       - name: Create a pull-request if ${{ inputs.pkg-info-path }} was modified
         if: github.event_name != 'pull_request' && steps.commit.outputs.changes_detected == 'true'
         run: |
-          BRANCH_NAME='Bump/${{ steps.meta.outputs.repo }}/${{ steps.meta.outputs.latest-version }}'
+          BRANCH_NAME='Bump/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.version }}'
 
           echo "pkg-info was modified, the branch ${BRANCH_NAME} was created with the commit ${{ steps.commit.outputs.commit_hash }}"
           gh pr create --fill --head ${BRANCH_NAME}
