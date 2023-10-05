@@ -4,8 +4,8 @@ use regex::Regex;
 use rstest::rstest;
 
 use pkg_info_update::{
-    Arch, BashCmdReleaseHandler, Digest, GithubReleaseHandler, PkgInfo, PkgInfoBase, PkgInfoMode,
-    VersionedArchEntry,
+    Arch, BashCmdReleaseHandler, Digest, GithubReleaseHandler, JqScriptReleaseHandler, PkgInfo,
+    PkgInfoBase, PkgInfoMode, VersionedArchEntry,
 };
 
 #[rstest]
@@ -32,6 +32,20 @@ use pkg_info_update::{
         base: PkgInfoBase { name: "Foobar", latest_version: None, versions: None },
         mode: PkgInfoMode::BashCommand(BashCmdReleaseHandler {
             command: Cow::Borrowed(r#"echo '{ "version": "0.1.0", "assets": { "amd64": { "filename": "foobar", "download_url": "https://google.com", "digest": "sha256:e8bf04349572f90e569c5bd46be3f7101e1e289125adb8b9eaba94badba1c43a" } } }'"#)
+        })
+    }
+)]
+#[case::minimal_jq_script(
+    std::include_str!("samples/minimal-jq-script.json"),
+    PkgInfo {
+        base: PkgInfoBase {
+            name: "Sonarr",
+            latest_version: None,
+            versions: None
+        },
+        mode: PkgInfoMode::JqScript(JqScriptReleaseHandler {
+            document_url: url::Url::parse("https://services.sonarr.tv/v1/releases").unwrap(),
+            script_path: "sonarr.jq".as_ref()
         })
     }
 )]

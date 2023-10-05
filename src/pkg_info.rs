@@ -10,7 +10,9 @@ use std::{
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-pub use mode::{BashCmdReleaseHandler, GithubReleaseHandler, Mode, ModeGetLatestVersion};
+pub use mode::{
+    BashCmdReleaseHandler, GithubReleaseHandler, JqScriptReleaseHandler, Mode, ModeGetLatestVersion,
+};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PkgInfo<'a> {
