@@ -1,0 +1,49 @@
+name: Called Workflow ref
+description: Retrieve the called workflow ref.
+
+inputs:
+  src-workflow-ref:
+    default: ${{ github.workflow_ref }}
+    required: true
+    description: The ref of the current workflow to extract the target workflow's ref.
+  src-repository:
+    default: ${{ github.repository }}
+    required: true
+    description: The repository name of the current workflow (in the form of `<OWNER>/<REPO>`).
+
+  called-repository:
+    required: true
+    description: The repository of the called workflow.
+
+  called-workflow-path:
+    required: true
+    description: The path to the called workflow in the repository.
+
+outputs:
+  workflow-ref:
+    description: The reference of the target workflow
+    value: ${{ steps.workflow.outputs.workflow_ref }}
+
+runs:
+  using: composite
+  steps:
+    - name: Retrieve called workflow ref
+      id: workflow
+      shell: bash
+      run: |
+        set -o pipefail -eu
+        echo src_workflow_ref=$src_workflow_ref
+
+        src_workflow_path=$(echo ${src_workflow_ref#'${{ inputs.src-repository }}/'} | cut -d@ -f1)
+
+        echo src_workflow_path=$src_workflow_path
+
+        echo workflow_ref=$( \
+          grep -e \
+            '${{ inputs.called-repository }}/${{ inputs.called-workflow-path }}@.*' \
+            $src_workflow_path \
+            | head -n 1 \
+            | cut -d@ -f2 \
+        ) | tee -a $GITHUB_OUTPUT
+      env:
+        src_workflow_ref: ${{ inputs.src-workflow-ref }}
