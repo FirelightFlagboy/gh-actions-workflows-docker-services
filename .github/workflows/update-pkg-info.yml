@@ -9,7 +9,7 @@ on:
         default: pkg-info.json
       repo-type:
         type: string
-        description: The reposiroty type of the wrapped service.
+        description: The repository type of the wrapped service.
         default: github
 
 jobs:
