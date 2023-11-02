@@ -24,23 +24,15 @@ jobs:
 
       - name: Retrieve called workflow ref
         id: workflow
-        run: |
-          set -o pipefail -eu
-          src_workflow_ref='${{ github.workflow_ref }}'
-          echo src_workflow_ref=$src_workflow_ref
-          src_workflow_path=$(echo ${src_workflow_ref#'${{ github.repository }}/'} | cut -d@ -f1)
-          echo src_workflow_path=$src_workflow_path
-          echo workflow_ref=$( \
-            grep -e \
-              'FirelightFlagboy/gh-actions-workflows-docker-services/.github/workflows/update-pkg-info.yml@.*' \
-              $src_workflow_path \
-              | cut -d@ -f2 \
-          ) | tee -a $GITHUB_OUTPUT
+        uses: ./.github/actions/called-workflow-ref
+        with:
+          called-repository: FirelightFlagboy/gh-actions-workflows-docker-services
+          called-workflow-path: .github/workflows/update-pkg-info.yml
 
       - name: Checkout workflow repostorty to access utility scripts
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          ref: ${{ steps.workflow.outputs.workflow_ref }}
+          ref: ${{ steps.workflow.outputs.workflow-ref }}
           repository: FirelightFlagboy/gh-actions-workflows-docker-services
           path: gh-actions-workflows-docker-services
           sparse-checkout: |
