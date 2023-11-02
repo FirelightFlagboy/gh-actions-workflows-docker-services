@@ -1,0 +1,46 @@
+name: Test action called workflow ref
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - .github/workflows/test-actions-called-workflow-ref.yml
+      - .github/actions/called-workflow-ref/*
+  pull_request:
+    paths:
+      - .github/workflows/test-actions-called-workflow-ref.yml
+      - .github/actions/called-workflow-ref/*
+
+jobs:
+  test:
+    name: Test action called workflow ref
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Generate dummy caller workflow
+        run: |
+          cat << EOF | tee dummy-workflow.yml
+          name: Dummy workflow
+
+          on:
+            push:
+
+          jobs:
+            foo:
+              uses: FooBar/DummyRepo/DummyWorkflow@${{ github.ref }}-${{ github.run_id }}
+          EOF
+
+      - name: Get workflow ref
+        id: workflow
+        uses: ./.github/actions/called-workflow-ref
+        with:
+          src-workflow-ref: 'dummy-workflow.yml@some-unknown-ref'
+          src-repository: ''
+          called-repository: FooBar/DummyRepo
+          called-workflow-path: DummyWorkflow
+
+      - name: Skipped if we have the expected value
+        if: steps.workflow.outputs.workflow-ref != format('{0}-{1}', github.ref, github.run_id)
+        run: 'false'
