@@ -1,0 +1,30 @@
+name: Pkg version to use
+description: Determine which version to use and if it is the latest version
+
+inputs:
+  pkg-file:
+    default: pkg-info.json
+    required: true
+    description: The path to the pkg-info file.
+  pkg-version:
+    required: false
+    description: The desired pkg version to use.
+
+outputs:
+  version:
+    description: The version to use.
+    value: ${{ steps.script.outputs.version }}
+  is-latest:
+    description: True if the version to use is the latest one.
+    value: ${{ steps.script.outputs.is_latest }}
+
+runs:
+  using: composite
+  steps:
+    - name: foo
+      id: script
+      shell: bash
+      run: ./.github/actions/pkg-version-to-use/action.sh
+      env:
+        PKG_FILE: ${{ inputs.pkg-file }}
+        PKG_VERSION: ${{ inputs.pkg-version }}
