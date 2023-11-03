@@ -9,7 +9,7 @@
   - **(BREAKING CHANGE)** `docker-repository`: The repository name to push the image.
 - The input `pkg-version` is now optional (will use the latest version defined in `pkg-file`). ([#23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
 
-## Update-pkg-info workflow
+### Update-pkg-info workflow
 
 - Correct typo on description ([#22](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/22))
 - Fix failure when branch already exit ([#17](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/issues/17))
