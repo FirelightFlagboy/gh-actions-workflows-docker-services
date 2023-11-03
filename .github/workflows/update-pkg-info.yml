@@ -79,6 +79,7 @@ jobs:
           branch: Bump/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.version }}
           commit_message: Bump ${{ steps.meta.outputs.name }} to ${{ steps.meta.outputs.version }}
           commit_options: --signoff
+          push_options: --force-with-lease
           file_pattern: ${{ inputs.pkg-info-path }}
           create_branch: true
 
