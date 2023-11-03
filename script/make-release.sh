@@ -2,6 +2,7 @@ set -eu -o pipefail
 
 SCRIPTDIR=${SCRIPTDIR:=$(dirname $(realpath -s "$0"))}
 ROOTDIR=${ROOTDIR:=$(realpath -s "$SCRIPTDIR/../../..")}
+SKIP_RELEASE_CREATION=${SKIP_RELEASE_CREATION:-0}
 
 NEW_VERSION=${1:?Missing new version}
 
@@ -55,6 +56,11 @@ function create_release_with_artifact {
 build_new_version_for_bin
 
 add_new_version_to_pkg_file
+
+if [ $SKIP_RELEASE_CREATION -ne 0 ]; then
+  echo "SKIP_RELEASE_CREATION set, skipping release creation"
+  exit 0
+fi
 
 commit_file_for_release
 
