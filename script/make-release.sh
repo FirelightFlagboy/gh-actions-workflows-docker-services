@@ -11,7 +11,7 @@ TEMP_FILES=()
 
 function cleanup_temp_files {
   for temp_file in "${TEMP_FILES[@]}" ; do
-    rm -v $temp_file
+    rm $temp_file
   done
 }
 
