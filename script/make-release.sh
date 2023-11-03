@@ -6,6 +6,16 @@ SKIP_RELEASE_CREATION=${SKIP_RELEASE_CREATION:-0}
 
 NEW_VERSION=${1:?Missing new version}
 
+TEMP_FILES=()
+
+function cleanup_temp_files {
+  for temp_file in ${TEMP_FILES[@]}; do
+    rm -v $temp_file
+  done
+}
+
+trap "cleanup_temp_files" EXIT INT
+
 function build_new_version_for_bin {
   sed -i "s/^version = \".*\"$/version = \"$NEW_VERSION\"/" Cargo.toml
 
@@ -19,13 +29,13 @@ function add_new_version_to_pkg_file {
   local DOWNLOAD_URL=https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/releases/download/v$NEW_VERSION/pkg-info-updater-linux-amd64
   local SHA512SUM=$(sha512sum target/release/pkg-info-updater | cut -f 1 -d' ')
   local TEMP_FILE=$(mktemp)
-  trap "[ -f $TEMP_FILE ] && rm -f $TEMP_FILE" EXIT INT
+  TEMP_FILES+=$TEMP_FILE
 
   jq \
     ".versions[\"$NEW_VERSION\"] = {\"$ARCH\":{\"filename\":\"$FILENAME\",\"download_url\":\"$DOWNLOAD_URL\",\"digest\":\"sha512:$SHA512SUM\"}} | .latest_version = \"$NEW_VERSION\"" \
     pkg-info.json > $TEMP_FILE
 
-  mv $TEMP_FILE pkg-info.json
+  cp $TEMP_FILE pkg-info.json
 }
 
 function commit_file_for_release {
