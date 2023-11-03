@@ -5,6 +5,7 @@ ROOTDIR=${ROOTDIR:=$(realpath -s "$SCRIPTDIR/../../..")}
 SKIP_RELEASE_CREATION=${SKIP_RELEASE_CREATION:-0}
 
 NEW_VERSION=${1:?Missing new version}
+RELEASE_DATE=$(date --rfc-3339=date --utc)
 
 TEMP_FILES=()
 
@@ -39,12 +40,27 @@ function add_new_version_to_pkg_file {
 }
 
 function changelog_for_release {
-  grep -q marker-end-of-unreleased-change CHANGELOG.md
-  awk -f $SCRIPTDIR/extract-change-for-release.awk CHANGELOG.md
+  grep -v '^<!-- markdownlint-configure-file .* -->$' UNRELEASED-CHANGELOG.md
+}
+
+function update_changelog {
+  local TEMP_CHANGELOG=$(mktemp)
+  TEMP_FILES+=($TEMP_CHANGELOG)
+  (
+    echo
+    echo "## $NEW_VERSION ($RELEASE_DATE)"
+    echo
+    changelog_for_release
+  ) > $TEMP_CHANGELOG
+
+  # Include changelog entry after marker
+  sed -i "/split-marker/ r $TEMP_CHANGELOG" CHANGELOG.md
+  # Remove content from UNRELEASED-CHANGELOG
+  sed -i '/markdownlint-configure-file/!d' UNRELEASED-CHANGELOG.md
 }
 
 function commit_file_for_release {
-  git add pkg-info.json Cargo.toml Cargo.lock
+  git add pkg-info.json Cargo.toml Cargo.lock CHANGELOG.md UNRELEASE-CHANGELOG.md
   git commit --signoff --gpg-sign -m "Prepare for release $NEW_VERSION"
 }
 
@@ -77,6 +93,8 @@ RELEASE_BLOB=$(mktemp)
 TEMP_FILES+=($RELEASE_BLOB)
 
 changelog_for_release > $RELEASE_BLOB
+
+update_changelog
 
 if [ $SKIP_RELEASE_CREATION -ne 0 ]; then
   echo "SKIP_RELEASE_CREATION set, skipping release creation"
