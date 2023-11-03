@@ -4,18 +4,21 @@
 
 ### Docker-build-publish workflow
 
-- Add the following required inputs: ([PR-23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
+- Add the following required inputs: ([#23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
   - `pkg-file`: The path to the `pkg-file` (default to `pkg-info.json`).
   - **(BREAKING CHANGE)** `docker-repository`: The repository name to push the image.
-- The input `pkg-version` is now optional (will use the latest version defined in `pkg-file`). ([PR-23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
+- The input `pkg-version` is now optional (will use the latest version defined in `pkg-file`). ([#23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
 
 ## Update-pkg-info workflow
 
-- Correct typo on description ([PR-22](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/22))
+- Correct typo on description ([#22](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/22))
+- Fix failure when branch already exit ([#17](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/issues/17))
+
+  Now if the branch already exist, it will be reset to the change made by this workflow (we `git push --force` the change).
 
 ### Internal change
 
-- Add action `called-workflow-ref`. ([PR-21](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/21))
+- Add action `called-workflow-ref`. ([#21](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/21))
 
   This action is used when a called workflow need to know its ref used.
 
@@ -29,7 +32,7 @@
   - Will look in the source workflow for the pattern of the called workflow to extract its **FIRST** reference.
   - Output the called workflow ref specified in the source workflow.
 
-- Add action `pkg-version-to-use`. ([PR-23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
+- Add action `pkg-version-to-use`. ([#23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
 
   The action will:
 
