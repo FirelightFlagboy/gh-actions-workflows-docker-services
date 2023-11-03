@@ -9,7 +9,7 @@ NEW_VERSION=${1:?Missing new version}
 TEMP_FILES=()
 
 function cleanup_temp_files {
-  for temp_file in ${TEMP_FILES[@]}; do
+  for temp_file in "${TEMP_FILES[@]}" ; do
     rm -v $temp_file
   done
 }
@@ -29,13 +29,18 @@ function add_new_version_to_pkg_file {
   local DOWNLOAD_URL=https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/releases/download/v$NEW_VERSION/pkg-info-updater-linux-amd64
   local SHA512SUM=$(sha512sum target/release/pkg-info-updater | cut -f 1 -d' ')
   local TEMP_FILE=$(mktemp)
-  TEMP_FILES+=$TEMP_FILE
+  TEMP_FILES+=($TEMP_FILE)
 
   jq \
     ".versions[\"$NEW_VERSION\"] = {\"$ARCH\":{\"filename\":\"$FILENAME\",\"download_url\":\"$DOWNLOAD_URL\",\"digest\":\"sha512:$SHA512SUM\"}} | .latest_version = \"$NEW_VERSION\"" \
     pkg-info.json > $TEMP_FILE
 
   cp $TEMP_FILE pkg-info.json
+}
+
+function changelog_for_release {
+  grep -q marker-end-of-unreleased-change CHANGELOG.md
+  awk -f $SCRIPTDIR/extract-change-for-release.awk CHANGELOG.md
 }
 
 function commit_file_for_release {
@@ -57,7 +62,8 @@ function create_release_with_artifact {
   gh release create "v$NEW_VERSION" \
     --title "$NEW_VERSION" \
     --draft \
-    --generate-notes \
+    # --generate-notes \
+    --notes-file $1 \
     --latest \
     --verify-tag \
     "/tmp/pkg-info-updater-$OS-$ARCH"
@@ -66,6 +72,11 @@ function create_release_with_artifact {
 build_new_version_for_bin
 
 add_new_version_to_pkg_file
+
+RELEASE_BLOB=$(mktemp)
+TEMP_FILES+=($RELEASE_BLOB)
+
+changelog_for_release > $RELEASE_BLOB
 
 if [ $SKIP_RELEASE_CREATION -ne 0 ]; then
   echo "SKIP_RELEASE_CREATION set, skipping release creation"
@@ -78,4 +89,4 @@ create_tag
 
 push_change
 
-create_release_with_artifact
+create_release_with_artifact $RELEASE_BLOB
