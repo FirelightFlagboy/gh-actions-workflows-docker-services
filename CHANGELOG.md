@@ -15,6 +15,20 @@
 
 ### Internal change
 
+- Add action `called-workflow-ref`. ([PR-21](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/21))
+
+  This action is used when a called workflow need to know its ref used.
+
+  The action will:
+
+  - Take 4 inputs:
+    - The source workflow ref (default to `github.workflow_ref`).
+    - The source repository (default to `github.repository`).
+    - The called workflow repository.
+    - The called workflow path.
+  - Will look in the source workflow for the pattern of the called workflow to extract its **FIRST** reference.
+  - Output the called workflow ref specified in the source workflow.
+
 - Add action `pkg-version-to-use`. ([PR-23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
 
   The action will:
