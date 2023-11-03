@@ -1,0 +1,85 @@
+name: Test action called workflow ref
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - .github/workflows/test-pkg-version-to-use.yml
+      - .github/actions/pkg-version-to-use/*
+  pull_request:
+    paths:
+      - .github/workflows/test-pkg-version-to-use.yml
+      - .github/actions/pkg-version-to-use/*
+
+jobs:
+  test:
+    name: Test action called workflow ref
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Generate dummy pkg-info file
+        run: |
+          cat << EOF | tee dummy-pkg-info.json
+          {
+            "latest_version": "1.2.3",
+            "versions": {
+              "1.2.3": {},
+              "1.0.0": {},
+              "0.0.0": {}
+            }
+          }
+          EOF
+
+      # With no pkg-version specified, the action should return the latest version.
+      - name: Get latest version
+        id: lst-pkg-ver
+        uses: ./.github/actions/pkg-version-to-use
+        with:
+          pkg-file: dummy-pkg-info.json
+          pkg-version: ''
+
+      - name: We got the latest version
+        run: >
+          [ '${{ steps.lst-pkg-ver.outputs.is-latest }}' == 'true' ] &&
+          [ '${{ steps.lst-pkg-ver.outputs.version }}' == '1.2.3' ]
+
+      # If we specify the version and it's the latest version, `is-latest` should be set.
+      - name: Get latest version explicitly
+        id: lst-fix-pkg-ver
+        uses: ./.github/actions/pkg-version-to-use
+        with:
+          pkg-file: dummy-pkg-info.json
+          pkg-version: '1.2.3'
+
+      - name: We got the latest version explicitly
+        run: >
+          [ '${{ steps.lst-fix-pkg-ver.outputs.is-latest }}' == 'true' ] &&
+          [ '${{ steps.lst-fix-pkg-ver.outputs.version }}' == '1.2.3' ]
+
+      # If we get an old version, `is-latest` should be false.
+      - name: Get old version
+        id: old-pkg-ver
+        uses: ./.github/actions/pkg-version-to-use
+        with:
+          pkg-file: dummy-pkg-info.json
+          pkg-version: '1.0.0'
+
+      - name: We got the old version
+        run: >
+          [ '${{ steps.old-pkg-ver.outputs.is-latest }}' == 'false' ] &&
+          [ '${{ steps.old-pkg-ver.outputs.version }}' == '1.0.0' ]
+
+      # If we try to get an unknown version, the action should fail
+      - name: Get Unknown version
+        id: unknown-ver
+        uses: ./.github/actions/pkg-version-to-use
+        with:
+          pkg-file: dummy-pkg-info.json
+          pkg-version: '0.0.42'
+        continue-on-error: true
+
+      - name: Unknown version should fail
+        run: >
+          [ '${{ steps.unknown-ver.outcome }}' == 'failure' ]
