@@ -98,6 +98,9 @@ update_changelog
 
 if [ $SKIP_RELEASE_CREATION -ne 0 ]; then
   echo "SKIP_RELEASE_CREATION set, skipping release creation"
+  echo
+  echo -e "\x1b[1mThe release would have used this notes:\x1b[0m"
+  cat $RELEASE_BLOB
   exit 0
 fi
 
