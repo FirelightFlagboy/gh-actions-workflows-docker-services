@@ -26,7 +26,7 @@ jobs:
 
       - name: Retrieve called workflow ref
         id: workflow
-        uses: ./.github/actions/called-workflow-ref
+        uses: FirelightFlagboy/gh-actions-workflows-docker-services/.github/actions/called-workflow-ref@c69fa0ea29498dd15ce04b751dea05c272934c39
         with:
           called-repository: FirelightFlagboy/gh-actions-workflows-docker-services
           called-workflow-path: .github/workflows/update-pkg-info.yml

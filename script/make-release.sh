@@ -59,6 +59,13 @@ function update_changelog {
   sed -i '/markdownlint-configure-file/!d' UNRELEASED-CHANGELOG.md
 }
 
+function update_gh_workflows {
+  sed -i \
+    "s;\(uses: FirelightFlagboy/gh-actions-workflows-docker-services\)/\(.*\)@.*;\1/\2@v$NEW_VERSION;" \
+    .github/workflows/docker-build-publish.yml \
+    .github/workflows/update-pkg-info.yml
+}
+
 function commit_file_for_release {
   git add pkg-info.json Cargo.toml Cargo.lock CHANGELOG.md UNRELEASE-CHANGELOG.md
   git commit --signoff --gpg-sign -m "Prepare for release $NEW_VERSION"
@@ -95,6 +102,8 @@ TEMP_FILES+=($RELEASE_BLOB)
 changelog_for_release > $RELEASE_BLOB
 
 update_changelog
+
+update_gh_workflows
 
 if [ $SKIP_RELEASE_CREATION -ne 0 ]; then
   echo "SKIP_RELEASE_CREATION set, skipping release creation"

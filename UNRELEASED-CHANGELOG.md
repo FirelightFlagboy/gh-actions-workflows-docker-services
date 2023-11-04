@@ -72,3 +72,8 @@
       VER_EXIST -- YES --> VER_LATEST
     end
   ```
+
+- Fix `can't find 'action.yml'` ([#28](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/issues/28) & [#29](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/issues/29))
+
+  The reusable workflows `docker-build-publish` & `update-pkg-info` used local action that doesn't exist when called from an external repository
+  Because the action aren't present.
