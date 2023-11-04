@@ -7,7 +7,7 @@ on:
         type: string
         description: The path to the pkg-info file
         default: pkg-info.json
-        required: true
+        required: false
       pkg-version:
         type: string
         description: The version of the package (latest by default)
@@ -16,6 +16,7 @@ on:
         type: string
         description: The registry to push the images to.
         default: docker.io
+        required: false
       tags:
         type: string
         description: The list of tags to set for the built image.
@@ -32,6 +33,7 @@ on:
         type: string
         description: The platforms to target for.
         default: linux/arm64,linux/amd64
+        required: false
     secrets:
       docker-password:
         description: The password to use with `docker login -u ..`

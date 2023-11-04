@@ -7,10 +7,12 @@ on:
         type: string
         description: Path to the `pkg-info.json` file.
         default: pkg-info.json
+        required: false
       repo-type:
         type: string
         description: The repository type of the wrapped service.
         default: github
+        required: false
 
 jobs:
   update:
