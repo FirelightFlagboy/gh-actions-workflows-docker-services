@@ -1,9 +1,14 @@
 <!-- markdownlint-configure-file { "first-line-heading": { "level": 3 } } -->
 ### Docker-build-publish workflow
 
-- Add the following inputs: ([#23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
-  - `pkg-file`: The path to the `pkg-file` (default to `pkg-info.json`).
-  - **(BREAKING CHANGE)** `docker-repository`: The repository name to push the image.
+#### Breaking Change
+
+- Add new required inputs `docker-repository`: The repository name to push the image to. ([#23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
+- Remove inputs `tags` ([#27](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
+
+#### Other Change
+
+- Add the inputs `pkg-file`: The path to the `pkg-file` (default to `pkg-info.json`). ([#23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
 - The input `pkg-version` is now optional (will use the latest version defined in `pkg-file`). ([#23](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/pull/23))
 
 ### Update-pkg-info workflow
