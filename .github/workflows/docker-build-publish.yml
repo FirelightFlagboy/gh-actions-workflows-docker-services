@@ -17,10 +17,6 @@ on:
         description: The registry to push the images to.
         default: docker.io
         required: false
-      tags:
-        type: string
-        description: The list of tags to set for the built image.
-        required: true
       docker-username:
         type: string
         description: The username to use with `docker login -u ..`
