@@ -91,7 +91,6 @@ function create_release_with_artifact {
   gh release create "v$NEW_VERSION" \
     --title "$NEW_VERSION" \
     --draft \
-    # --generate-notes \
     --notes-file $1 \
     --latest \
     --verify-tag \
