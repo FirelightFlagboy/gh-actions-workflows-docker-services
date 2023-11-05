@@ -67,7 +67,12 @@ function update_gh_workflows {
 }
 
 function commit_file_for_release {
-  git add pkg-info.json Cargo.toml Cargo.lock CHANGELOG.md UNRELEASED-CHANGELOG.md
+  git add \
+    pkg-info.json \
+    Cargo.toml Cargo.lock \
+    CHANGELOG.md UNRELEASED-CHANGELOG.md \
+    .github/workflows/docker-build-publish.yml \
+    .github/workflows/update-pkg-info.yml
   git commit --signoff --gpg-sign -m "Prepare for release $NEW_VERSION"
 }
 
