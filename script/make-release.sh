@@ -67,7 +67,7 @@ function update_gh_workflows {
 }
 
 function commit_file_for_release {
-  git add pkg-info.json Cargo.toml Cargo.lock CHANGELOG.md UNRELEASE-CHANGELOG.md
+  git add pkg-info.json Cargo.toml Cargo.lock CHANGELOG.md UNRELEASED-CHANGELOG.md
   git commit --signoff --gpg-sign -m "Prepare for release $NEW_VERSION"
 }
 
