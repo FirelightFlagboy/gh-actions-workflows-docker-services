@@ -77,3 +77,5 @@
 
   The reusable workflows `docker-build-publish` & `update-pkg-info` used local action that doesn't exist when called from an external repository
   Because the action aren't present.
+
+- Fix action cannot find utility script when used on a external repo ([#31](https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/issues/31)).
