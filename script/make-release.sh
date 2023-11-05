@@ -1,5 +1,8 @@
 set -eu -o pipefail
 
+OS=linux
+ARCH=amd64
+
 SCRIPTDIR=${SCRIPTDIR:=$(dirname $(realpath -s "$0"))}
 ROOTDIR=${ROOTDIR:=$(realpath -s "$SCRIPTDIR/../../..")}
 SKIP_RELEASE_CREATION=${SKIP_RELEASE_CREATION:-0}
@@ -24,8 +27,6 @@ function build_new_version_for_bin {
 }
 
 function add_new_version_to_pkg_file {
-  local ARCH=amd64
-  local OS=linux
   local FILENAME=pkg-info-updater-$OS-$ARCH
   local DOWNLOAD_URL=https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/releases/download/v$NEW_VERSION/pkg-info-updater-linux-amd64
   local SHA512SUM=$(sha512sum target/release/pkg-info-updater | cut -f 1 -d' ')
