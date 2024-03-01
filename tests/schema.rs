@@ -19,7 +19,7 @@ use pkg_info_updater::{
             versions: None
         },
         mode: PkgInfoMode::GithubRelease(GithubReleaseHandler {
-            repository_path: &"gohugoio/hugo",
+            repository_path: "gohugoio/hugo",
             arch_asset_patterns: [
                 (Arch::Amd64, Regex::new("^hugo_([0-9]+(\\.[0-9]+)+)_linux-amd64.tar.gz$").unwrap()),
                 (Arch::Arm64, Regex::new("^hugo_([0-9]+(\\.[0-9]+)+)_linux-arm64.tar.gz$").unwrap())
@@ -85,7 +85,7 @@ use pkg_info_updater::{
             ].into_iter().collect())
         },
         mode: PkgInfoMode::GithubRelease(GithubReleaseHandler {
-            repository_path: &"gohugoio/hugo",
+            repository_path: "gohugoio/hugo",
             arch_asset_patterns: [
                 (Arch::Amd64, Regex::new("^hugo_([0-9]+(\\.[0-9]+)+)_linux-amd64.tar.gz$").unwrap()),
                 (Arch::Arm64, Regex::new("^hugo_([0-9]+(\\.[0-9]+)+)_linux-arm64.tar.gz$").unwrap())

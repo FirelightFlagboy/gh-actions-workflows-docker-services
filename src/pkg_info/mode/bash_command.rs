@@ -42,7 +42,7 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
                     "TEST",
                     OsStr::new(if in_test_mode { "true" } else { "false" }),
                 ),
-                ("TMP_DIR", tmp_dir.as_os_str().clone()),
+                ("TMP_DIR", tmp_dir.as_os_str()),
             ])
             .env_remove("GITHUB_TOKEN")
             .stderr(Stdio::inherit());
