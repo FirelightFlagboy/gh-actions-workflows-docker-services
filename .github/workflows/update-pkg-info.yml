@@ -22,7 +22,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
 
       - name: Retrieve called workflow ref
         id: workflow
@@ -32,7 +32,7 @@ jobs:
           called-workflow-path: .github/workflows/update-pkg-info.yml
 
       - name: Checkout workflow repostorty to access utility scripts
-        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
         with:
           ref: ${{ steps.workflow.outputs.workflow-ref }}
           repository: FirelightFlagboy/gh-actions-workflows-docker-services
@@ -76,7 +76,7 @@ jobs:
       - name: Check if ${{ inputs.pkg-info-path }} was modified
         id: commit
         if: github.event_name != 'pull_request'
-        uses: stefanzweifel/git-auto-commit-action@b0f4d47f590e46dfe55fea81b3b068cb0aab8678
+        uses: stefanzweifel/git-auto-commit-action@7d0ca8f849305c56d36f992cfb1519b1af5b33f8
         with:
           branch: Bump/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.version }}
           commit_message: Bump ${{ steps.meta.outputs.name }} to ${{ steps.meta.outputs.version }}
