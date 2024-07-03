@@ -37,7 +37,7 @@ function add_new_version_to_pkg_file {
   echo "Adding new version to pkg-file"
   jq \
     ".versions[\"$NEW_VERSION\"] = {\"$ARCH\":{\"filename\":\"$FILENAME\",\"download_url\":\"$DOWNLOAD_URL\",\"digest\":\"sha512:$SHA512SUM\"}} | .latest_version = \"$NEW_VERSION\"" \
-    pkg-info.json > $TEMP_FILE
+    pkg-info.json | tee $TEMP_FILE
 
   cp $TEMP_FILE pkg-info.json
 }
@@ -112,6 +112,7 @@ add_new_version_to_pkg_file
 RELEASE_BLOB=$(mktemp)
 TEMP_FILES+=($RELEASE_BLOB)
 
+echo "Creating changelog for release"
 changelog_for_release > $RELEASE_BLOB
 
 update_changelog
