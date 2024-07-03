@@ -21,6 +21,7 @@ function cleanup_temp_files {
 trap "cleanup_temp_files" EXIT INT
 
 function build_new_version_for_bin {
+  echo "Building bin for $NEW_VERSION"
   sed -i "s/^version = \".*\"$/version = \"$NEW_VERSION\"/" Cargo.toml
 
   cargo build --release
@@ -33,6 +34,7 @@ function add_new_version_to_pkg_file {
   local TEMP_FILE=$(mktemp)
   TEMP_FILES+=($TEMP_FILE)
 
+  echo "Adding new version to pkg-file"
   jq \
     ".versions[\"$NEW_VERSION\"] = {\"$ARCH\":{\"filename\":\"$FILENAME\",\"download_url\":\"$DOWNLOAD_URL\",\"digest\":\"sha512:$SHA512SUM\"}} | .latest_version = \"$NEW_VERSION\"" \
     pkg-info.json > $TEMP_FILE
@@ -45,6 +47,7 @@ function changelog_for_release {
 }
 
 function update_changelog {
+  echo "Updating changelog"
   local TEMP_CHANGELOG=$(mktemp)
   TEMP_FILES+=($TEMP_CHANGELOG)
   (
@@ -61,6 +64,7 @@ function update_changelog {
 }
 
 function update_gh_workflows {
+  echo "Update Github workflows"
   sed -i \
     "s;\(uses: FirelightFlagboy/gh-actions-workflows-docker-services\)/\(.*\)@.*;\1/\2@v$NEW_VERSION;" \
     .github/workflows/docker-build-publish.yml \
@@ -68,6 +72,7 @@ function update_gh_workflows {
 }
 
 function commit_file_for_release {
+  echo "Commit release"
   git add \
     pkg-info.json \
     Cargo.toml Cargo.lock \
@@ -78,14 +83,17 @@ function commit_file_for_release {
 }
 
 function create_tag {
+  echo "Create tag"
   git tag --sign "v$NEW_VERSION" --message="Release version $NEW_VERSION"
 }
 
 function push_change {
+  echo "Push change"
   git push --atomic origin main "v$NEW_VERSION"
 }
 
 function create_release_with_artifact {
+  echo "Create github release"
   cp target/release/pkg-info-updater /tmp/pkg-info-updater-$OS-$ARCH
 
   gh release create "v$NEW_VERSION" \
