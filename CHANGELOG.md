@@ -7,6 +7,13 @@
 
 <!-- split-marker -->
 
+## 2.0.1 (2024-07-03)
+
+
+- Bump internal github actions
+- Bump rust dependencies
+- Update internal release script
+
 ## 2.0.0 (2023-11-05)
 
 ### Docker-build-publish workflow
