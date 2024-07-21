@@ -3,6 +3,6 @@
 pkgs.mkShell
 {
   packages = builtins.attrValues {
-    inherit (pkgs) jq rustup pkg-config gh;
+    inherit (pkgs) jq rustup pkg-config gh rust-analyzer;
   };
 }
