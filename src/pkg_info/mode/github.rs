@@ -1,7 +1,6 @@
-use std::{borrow::Cow, collections::HashMap, fmt::Debug, ops::Deref, path::Path, pin::Pin};
+use std::{borrow::Cow, collections::HashMap, fmt::Debug, ops::Deref, path::Path};
 
 use anyhow::Context;
-use futures::Future;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION};
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +10,7 @@ use crate::{
     PkgOption,
 };
 
-use super::ModeGetLatestVersion;
+use super::{ModeGetLatestVersion, VersionComponent};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ReleaseHandler<'a> {
@@ -20,60 +19,52 @@ pub struct ReleaseHandler<'a> {
 }
 
 impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
-    fn get_latest_version(
+    async fn get_latest_version(
         &self,
         option: &PkgOption,
         tmp_dir: &Path,
         in_test_mode: bool,
-    ) -> anyhow::Result<
-        Pin<Box<dyn Future<Output = anyhow::Result<(Version<'static>, VersionContent<'static>)>>>>,
-    > {
-        let repository_path = self.repository_path.to_string();
-        let arch_asset_patterns = self.arch_asset_patterns.clone();
-        let tmp_dir = tmp_dir.to_path_buf();
+    ) -> anyhow::Result<VersionComponent> {
         let github_token = std::env::var("GITHUB_TOKEN")
             .context("Cannot retrieve github token from env value `GITHUB_TOKEN`")?;
         let http_client = build_http_client(&github_token)?;
-        let option = *option;
 
-        Ok(Box::pin(async move {
-            log::info!("Fetching latest release ...");
-            let raw_body = get_raw_latest_release(&http_client, &repository_path).await?;
-            if in_test_mode {
-                let path = tmp_dir.join("latest-release.json");
-                log::trace!("Dump release json to {}", path.display());
-                std::fs::write(path, &raw_body).unwrap();
-            }
-            let latest_release = serde_json::from_str::<GithubRelease>(&raw_body)?;
-            log::info!(
-                "Latest release {}, found {} asset(s)",
-                latest_release.name,
-                latest_release.assets.len()
-            );
+        log::info!("Fetching latest release ...");
+        let raw_body = get_raw_latest_release(&http_client, &self.repository_path).await?;
+        if in_test_mode {
+            let path = tmp_dir.join("latest-release.json");
+            log::trace!("Dump release json to {}", path.display());
+            std::fs::write(path, &raw_body).unwrap();
+        }
+        let latest_release = serde_json::from_str::<GithubRelease>(&raw_body)?;
+        log::info!(
+            "Latest release {}, found {} asset(s)",
+            latest_release.name,
+            latest_release.assets.len()
+        );
 
-            let assets = latest_release
-                .assets
-                .into_iter()
-                .filter_map(|asset| {
-                    arch_asset_patterns
-                        .iter()
-                        .find(|(_arch, pattern)| pattern.is_match(&asset.name))
-                        .map(|(arch, _pattern)| (*arch, asset))
-                })
-                .collect::<HashMap<Arch, GithubAsset>>();
-            log::debug!("Collected assets: {assets:#?}");
-            log::info!("Calculating checksum for {} asset(s) ...", assets.len());
-            let assets_with_checksum = get_checksum_for_assets(&http_client, assets).await?;
-            log::trace!("Calculated checksums: {assets_with_checksum:#?}");
+        let assets = latest_release
+            .assets
+            .into_iter()
+            .filter_map(|asset| {
+                self.arch_asset_patterns
+                    .iter()
+                    .find(|(_arch, pattern)| pattern.is_match(&asset.name))
+                    .map(|(arch, _pattern)| (*arch, asset))
+            })
+            .collect::<HashMap<Arch, GithubAsset>>();
+        log::debug!("Collected assets: {assets:#?}");
+        log::info!("Calculating checksum for {} asset(s) ...", assets.len());
+        let assets_with_checksum = get_checksum_for_assets(&http_client, assets).await?;
+        log::trace!("Calculated checksums: {assets_with_checksum:#?}");
 
-            Ok((
-                Version::from_raw_str(
-                    Cow::Owned(latest_release.name.into()),
-                    option.strip_v_prefix,
-                ),
-                VersionContent(assets_with_checksum),
-            ))
-        }))
+        Ok((
+            Version::from_raw_str(
+                Cow::Owned(latest_release.name.into()),
+                option.strip_v_prefix,
+            ),
+            VersionContent(assets_with_checksum),
+        ))
     }
 }
 

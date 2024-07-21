@@ -3,8 +3,9 @@ mod external_cmd;
 mod github;
 mod jq_script;
 
-use std::{fmt::Debug, future::Future, path::Path, pin::Pin};
+use std::path::Path;
 
+use futures::Future;
 use serde::{Deserialize, Serialize};
 
 use super::VersionContent;
@@ -23,22 +24,31 @@ pub enum Mode<'a> {
     JqScript(#[serde(borrow)] jq_script::ReleaseHandler<'a>),
 }
 
-pub type BoxedFuture<Output> = Pin<Box<dyn Future<Output = Output>>>;
+pub type VersionComponent = (Version<'static>, VersionContent<'static>);
 
 impl<'a> Mode<'a> {
-    pub fn get_latest_version(
+    pub async fn get_latest_version(
         &self,
         option: &PkgOption,
         tmp_dir: &Path,
         in_test_mode: bool,
-    ) -> anyhow::Result<BoxedFuture<anyhow::Result<(Version<'static>, VersionContent<'static>)>>>
-    {
+    ) -> anyhow::Result<VersionComponent> {
         match self {
             Mode::GithubRelease(gh_release) => {
-                gh_release.get_latest_version(option, tmp_dir, in_test_mode)
+                gh_release
+                    .get_latest_version(option, tmp_dir, in_test_mode)
+                    .await
             }
-            Mode::BashCommand(command) => command.get_latest_version(option, tmp_dir, in_test_mode),
-            Mode::JqScript(script) => script.get_latest_version(option, tmp_dir, in_test_mode),
+            Mode::BashCommand(command) => {
+                command
+                    .get_latest_version(option, tmp_dir, in_test_mode)
+                    .await
+            }
+            Mode::JqScript(script) => {
+                script
+                    .get_latest_version(option, tmp_dir, in_test_mode)
+                    .await
+            }
         }
     }
 }
@@ -49,5 +59,5 @@ pub trait ModeGetLatestVersion {
         option: &PkgOption,
         tmp_dir: &Path,
         in_test_mode: bool,
-    ) -> anyhow::Result<BoxedFuture<anyhow::Result<(Version<'static>, VersionContent<'static>)>>>;
+    ) -> impl Future<Output = anyhow::Result<VersionComponent>>;
 }
