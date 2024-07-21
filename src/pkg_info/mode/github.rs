@@ -21,7 +21,7 @@ pub struct ReleaseHandler<'a> {
 impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
     async fn get_latest_version(
         &self,
-        _option: &PkgOption,
+        option: &PkgOption,
         tmp_dir: &Path,
         in_test_mode: bool,
     ) -> anyhow::Result<VersionComponent> {
@@ -30,20 +30,20 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
         let http_client = build_http_client(&github_token)?;
 
         log::info!("Fetching latest release ...");
-        let raw_body = get_raw_latest_release(&http_client, self.repository_path).await?;
+        let release =
+            get_release(&http_client, self.repository_path, option.allow_prerelease).await?;
         if in_test_mode {
             let path = tmp_dir.join("latest-release.json");
             log::trace!("Dump release json to {}", path.display());
-            std::fs::write(path, &raw_body).unwrap();
+            serde_json::to_writer(std::fs::File::create(path).unwrap(), &release).unwrap();
         }
-        let latest_release = serde_json::from_str::<GithubRelease>(&raw_body)?;
         log::info!(
             "Latest release {}, found {} asset(s)",
-            latest_release.name,
-            latest_release.assets.len()
+            release.name,
+            release.assets.len()
         );
 
-        let assets = latest_release
+        let assets = release
             .assets
             .into_iter()
             .filter_map(|asset| {
@@ -59,7 +59,7 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
         log::trace!("Calculated checksums: {assets_with_checksum:#?}");
 
         Ok((
-            RawVersion::from(Cow::Owned(latest_release.name.into())),
+            RawVersion::from(release.name),
             VersionContent(assets_with_checksum),
         ))
     }
@@ -153,14 +153,49 @@ fn bytes_to_hex_str(bytes: &[u8]) -> String {
     res
 }
 
-async fn get_raw_latest_release(
+async fn get_release(
     http_client: &reqwest::Client,
     repository_path: &str,
-) -> anyhow::Result<String> {
+    allow_prerelease: bool,
+) -> anyhow::Result<GithubRelease<'static>> {
+    const RELEASE_PER_PAGE: usize = 10;
+
+    if !allow_prerelease {
+        return get_latest_release(http_client, repository_path).await;
+    }
+    let url = format!("https://api.github.com/repos/{repository_path}/releases");
+    let mut page = 1;
+    loop {
+        let res = http_client
+            .get(&url)
+            .query(&[("per_page", RELEASE_PER_PAGE), ("page", page)])
+            .send()
+            .await?;
+
+        anyhow::ensure!(
+            res.status() == reqwest::StatusCode::OK,
+            "Invalid response status: {}",
+            res.status(),
+        );
+
+        let raw_body = res.text().await?;
+        let releases = serde_json::from_str::<Vec<GithubRelease>>(&raw_body)?;
+        for release in releases {
+            if !release.draft && release.prerelease == allow_prerelease {
+                return Ok(release.to_owned());
+            }
+        }
+        page += 1;
+    }
+}
+
+async fn get_latest_release(
+    http_client: &reqwest::Client,
+    repository_path: &str,
+) -> anyhow::Result<GithubRelease<'static>> {
     let res = http_client
         .get(format!(
-            "https://api.github.com/repos/{}/releases/latest",
-            repository_path
+            "https://api.github.com/repos/{repository_path}/releases/latest",
         ))
         .send()
         .await?;
@@ -171,7 +206,8 @@ async fn get_raw_latest_release(
         res.status(),
     );
 
-    Ok(res.text().await?)
+    let raw_body = res.text().await?;
+    Ok(serde_json::from_str::<GithubRelease>(&raw_body)?.to_owned())
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -269,15 +305,44 @@ mod arch_pattern_map {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GithubRelease<'a> {
+    #[serde(borrow)]
     name: Cow<'a, str>,
+    #[serde(borrow)]
+    tag_name: Cow<'a, str>,
+    prerelease: bool,
+    draft: bool,
+    #[serde(borrow)]
     assets: Vec<GithubAsset<'a>>,
+}
+
+impl GithubRelease<'_> {
+    fn to_owned(&self) -> GithubRelease<'static> {
+        GithubRelease {
+            name: Cow::Owned(self.name.clone().into()),
+            tag_name: Cow::Owned(self.tag_name.clone().into()),
+            prerelease: self.prerelease,
+            draft: self.draft,
+            assets: self.assets.iter().map(GithubAsset::to_owned).collect(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct GithubAsset<'a> {
+    #[serde(borrow)]
     name: Cow<'a, str>,
     size: usize,
     browser_download_url: url::Url,
+}
+
+impl GithubAsset<'_> {
+    fn to_owned(&self) -> GithubAsset<'static> {
+        GithubAsset {
+            name: Cow::Owned(self.name.clone().into()),
+            size: self.size,
+            browser_download_url: self.browser_download_url.clone(),
+        }
+    }
 }
 
 impl<'a> Debug for GithubAsset<'a> {

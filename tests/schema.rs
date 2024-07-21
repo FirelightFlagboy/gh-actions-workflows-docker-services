@@ -118,12 +118,34 @@ use pkg_info_updater::{
             ].into_iter().collect())
         },
         option: PkgOption {
-            strip_v_prefix: true
+            strip_v_prefix: true,
+            ..Default::default()
         },
         mode: PkgInfoMode::GithubRelease(GithubReleaseHandler {
             repository_path: "gohugoio/hugo",
             arch_asset_patterns: [
                 (Arch::Amd64, Regex::new("^hugo_([0-9]+(\\.[0-9]+)+)_linux-amd64.tar.gz$").unwrap()),
+            ].into_iter().collect()
+        })
+    }
+)]
+#[case::allow_prerelease(
+    std::include_str!("samples/allow-prerelease.json"),
+    PkgInfo {
+        base: PkgInfoBase {
+            schema: Some("../../pkg-info.schema.json"),
+            name: "ArgoCD",
+            latest_version: None,
+            versions: Some([].into_iter().collect())
+        },
+        option: PkgOption {
+            allow_prerelease: true,
+            ..Default::default()
+        },
+        mode: PkgInfoMode::GithubRelease(GithubReleaseHandler {
+            repository_path: "argoproj/argo-cd",
+            arch_asset_patterns: [
+                (Arch::Amd64, Regex::new("^argocd-linux-amd64$").unwrap()),
             ].into_iter().collect()
         })
     }

@@ -36,6 +36,9 @@
     "strip_v_prefix": {
       "type": "boolean"
     },
+    "allow_prerelease": {
+      "type": "boolean"
+    },
     "name": {
       "type": "string"
     },

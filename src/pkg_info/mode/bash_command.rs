@@ -27,12 +27,15 @@ pub struct ReleaseHandler<'a> {
 impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
     async fn get_latest_version(
         &self,
-        _option: &PkgOption,
+        option: &PkgOption,
         tmp_dir: &Path,
         in_test_mode: bool,
     ) -> anyhow::Result<VersionComponent> {
         let mut cmd = Command::new("bash");
 
+        if option.allow_prerelease {
+            cmd.env("ALLOW_PRERELEASE", "1");
+        }
         cmd.args(["-c", &self.command])
             .envs([
                 (

@@ -20,7 +20,7 @@ pub struct ReleaseHandler<'a> {
 impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
     async fn get_latest_version(
         &self,
-        _option: &PkgOption,
+        option: &PkgOption,
         _tmp_dir: &Path,
         _in_test_mode: bool,
     ) -> anyhow::Result<VersionComponent> {
@@ -29,6 +29,9 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
             .context("Failed to build http client")?;
 
         let mut cmd = Command::new("jq");
+        if option.allow_prerelease {
+            cmd.env("ALLOW_PRERELEASE", "1");
+        }
         cmd.arg("--from-file")
             .arg(self.script_path)
             .stdin(Stdio::piped())

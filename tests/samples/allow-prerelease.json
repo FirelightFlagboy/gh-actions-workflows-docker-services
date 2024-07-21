@@ -1,0 +1,11 @@
+{
+  "$schema": "../../pkg-info.schema.json",
+  "name": "ArgoCD",
+  "versions": {},
+  "mode": "github-release",
+  "repository_path": "argoproj/argo-cd",
+  "arch_asset_patterns": {
+    "amd64": "^argocd-linux-amd64$"
+  },
+  "allow_prerelease": true
+}

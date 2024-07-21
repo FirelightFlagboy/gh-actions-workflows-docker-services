@@ -29,6 +29,9 @@ pub struct PkgOption {
     /// Remove the `v` prefix from the version string.
     #[serde(default)]
     pub strip_v_prefix: bool,
+    /// Allow to use prerelease version.
+    #[serde(default)]
+    pub allow_prerelease: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
