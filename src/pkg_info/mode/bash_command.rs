@@ -17,7 +17,7 @@ use std::{
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-use crate::ModeGetLatestVersion;
+use crate::{version, ModeGetLatestVersion, PkgOption};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -29,10 +29,16 @@ pub struct ReleaseHandler<'a> {
 impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
     fn get_latest_version(
         &self,
+        option: &PkgOption,
         tmp_dir: &Path,
         in_test_mode: bool,
     ) -> anyhow::Result<
-        super::BoxedFuture<anyhow::Result<(String, crate::pkg_info::Version<'static>)>>,
+        super::BoxedFuture<
+            anyhow::Result<(
+                version::Version<'static>,
+                crate::pkg_info::VersionContent<'static>,
+            )>,
+        >,
     > {
         let mut cmd = Command::new("bash");
 
@@ -57,7 +63,7 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
             self.command
         );
 
-        let res = super::external_cmd::process_output(output);
+        let res = super::external_cmd::process_output(option, output);
 
         Ok(Box::pin(futures::future::ready(res)))
     }

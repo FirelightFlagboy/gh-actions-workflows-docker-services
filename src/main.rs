@@ -31,15 +31,18 @@ fn main() -> anyhow::Result<()> {
 
     log::trace!("pkg_info={pkg_info:#?}");
 
-    let fut = pkg_info.mode.get_latest_version(&args.tmp_dir, args.test)?;
+    let fut = pkg_info
+        .mode
+        .get_latest_version(&pkg_info.option, &args.tmp_dir, args.test)?;
 
     let tokio_runtime = tokio::runtime::Runtime::new()?;
     let (version, content) = tokio_runtime.block_on(fut)?;
     let mut pkg_info = pkg_info;
 
-    pkg_info.base.latest_version = Some(Cow::Borrowed(version.as_str()));
+    let borrowed_version = Cow::Borrowed(version.as_str());
+    pkg_info.base.latest_version = Some(borrowed_version.clone());
     let versions = pkg_info.base.versions.get_or_insert_with(Default::default);
-    *versions.entry(Cow::Borrowed(&version)).or_default() = content;
+    *versions.entry(borrowed_version).or_default() = content;
 
     let raw_dump_data = serde_json::to_string_pretty(&pkg_info).context("Serializing the data")?;
 

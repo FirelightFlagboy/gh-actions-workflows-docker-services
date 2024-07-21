@@ -20,6 +20,15 @@ pub struct PkgInfo<'a> {
     pub base: Base<'a>,
     #[serde(flatten, borrow)]
     pub mode: Mode<'a>,
+    #[serde(flatten)]
+    pub option: PkgOption,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default, Clone, Copy)]
+pub struct PkgOption {
+    /// Remove the `v` prefix from the version string.
+    #[serde(default)]
+    pub strip_v_prefix: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -37,11 +46,11 @@ pub struct Base<'a> {
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct Versions<'a>(
     #[serde(borrow, serialize_with = "crate::serde_utils::ordered_map")]
-    HashMap<Cow<'a, str>, Version<'a>>,
+    HashMap<Cow<'a, str>, VersionContent<'a>>,
 );
 
 impl<'a> Deref for Versions<'a> {
-    type Target = HashMap<Cow<'a, str>, Version<'a>>;
+    type Target = HashMap<Cow<'a, str>, VersionContent<'a>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -54,25 +63,25 @@ impl<'a> DerefMut for Versions<'a> {
     }
 }
 
-impl<'a> FromIterator<(Cow<'a, str>, Version<'a>)> for Versions<'a> {
-    fn from_iter<T: IntoIterator<Item = (Cow<'a, str>, Version<'a>)>>(iter: T) -> Self {
+impl<'a> FromIterator<(Cow<'a, str>, VersionContent<'a>)> for Versions<'a> {
+    fn from_iter<T: IntoIterator<Item = (Cow<'a, str>, VersionContent<'a>)>>(iter: T) -> Self {
         Self(HashMap::from_iter(iter))
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
-pub struct Version<'a>(
+pub struct VersionContent<'a>(
     #[serde(borrow, serialize_with = "crate::serde_utils::ordered_map")]
     HashMap<Arch, VersionedArchEntry<'a>>,
 );
 
-impl<'a> FromIterator<(Arch, VersionedArchEntry<'a>)> for Version<'a> {
+impl<'a> FromIterator<(Arch, VersionedArchEntry<'a>)> for VersionContent<'a> {
     fn from_iter<T: IntoIterator<Item = (Arch, VersionedArchEntry<'a>)>>(iter: T) -> Self {
         Self(HashMap::from_iter(iter))
     }
 }
 
-impl<'a> Deref for Version<'a> {
+impl<'a> Deref for VersionContent<'a> {
     type Target = HashMap<Arch, VersionedArchEntry<'a>>;
 
     fn deref(&self) -> &Self::Target {

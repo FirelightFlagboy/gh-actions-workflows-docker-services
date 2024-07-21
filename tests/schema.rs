@@ -5,7 +5,7 @@ use rstest::rstest;
 
 use pkg_info_updater::{
     Arch, BashCmdReleaseHandler, Digest, GithubReleaseHandler, JqScriptReleaseHandler, PkgInfo,
-    PkgInfoBase, PkgInfoMode, VersionedArchEntry,
+    PkgInfoBase, PkgInfoMode, PkgOption, VersionedArchEntry,
 };
 
 #[rstest]
@@ -18,6 +18,7 @@ use pkg_info_updater::{
             latest_version: None,
             versions: None
         },
+        option: PkgOption::default(),
         mode: PkgInfoMode::GithubRelease(GithubReleaseHandler {
             repository_path: "gohugoio/hugo",
             arch_asset_patterns: [
@@ -36,6 +37,7 @@ use pkg_info_updater::{
             latest_version: None,
             versions: None
         },
+        option: PkgOption::default(),
         mode: PkgInfoMode::BashCommand(BashCmdReleaseHandler {
             command: Cow::Borrowed(r#"echo '{ "version": "0.1.0", "assets": { "amd64": { "filename": "foobar", "download_url": "https://google.com", "digest": "sha256:e8bf04349572f90e569c5bd46be3f7101e1e289125adb8b9eaba94badba1c43a" } } }'"#)
         })
@@ -50,6 +52,7 @@ use pkg_info_updater::{
             latest_version: None,
             versions: None
         },
+        option: PkgOption::default(),
         mode: PkgInfoMode::JqScript(JqScriptReleaseHandler {
             document_url: url::Url::parse("https://services.sonarr.tv/v1/releases").unwrap(),
             script_path: "sonarr.jq".as_ref()
@@ -84,11 +87,43 @@ use pkg_info_updater::{
                 ].into_iter().collect())
             ].into_iter().collect())
         },
+        option: PkgOption::default(),
         mode: PkgInfoMode::GithubRelease(GithubReleaseHandler {
             repository_path: "gohugoio/hugo",
             arch_asset_patterns: [
                 (Arch::Amd64, Regex::new("^hugo_([0-9]+(\\.[0-9]+)+)_linux-amd64.tar.gz$").unwrap()),
                 (Arch::Arm64, Regex::new("^hugo_([0-9]+(\\.[0-9]+)+)_linux-arm64.tar.gz$").unwrap())
+            ].into_iter().collect()
+        })
+    }
+)]
+#[case::v_prefixed_version(
+    std::include_str!("samples/v-prefixed-version.json"),
+    PkgInfo {
+        base: PkgInfoBase {
+            schema: Some("../../pkg-info.schema.json"),
+            name: "Gohugo",
+            latest_version: Some(Cow::Borrowed("0.119.0")),
+            versions: Some([
+                (Cow::Borrowed("0.119.0"), [
+                    (
+                        Arch::Amd64,
+                        VersionedArchEntry {
+                            filename: Cow::Borrowed("hugo_0.119.0_linux-amd64.tar.gz"),
+                            download_url: url::Url::parse("https://github.com/gohugoio/hugo/releases/download/v0.119.0/hugo_0.119.0_linux-amd64.tar.gz").unwrap(),
+                            digest: Digest::Sha512(Cow::Borrowed("01781c4162da4788a98b5d704222ca007ad020dbe3dfbdc18858ee2eafa115ba2792593370a905aa7c8f2a9f07170721f2de44fca191b29dc01f1108ea1af631"))
+                        }
+                    ),
+                ].into_iter().collect())
+            ].into_iter().collect())
+        },
+        option: PkgOption {
+            strip_v_prefix: true
+        },
+        mode: PkgInfoMode::GithubRelease(GithubReleaseHandler {
+            repository_path: "gohugoio/hugo",
+            arch_asset_patterns: [
+                (Arch::Amd64, Regex::new("^hugo_([0-9]+(\\.[0-9]+)+)_linux-amd64.tar.gz$").unwrap()),
             ].into_iter().collect()
         })
     }

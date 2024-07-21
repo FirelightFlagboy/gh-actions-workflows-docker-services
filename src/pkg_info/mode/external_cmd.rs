@@ -3,15 +3,18 @@ use std::{borrow::Cow, process::Output};
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-use crate::{pkg_info::Version, VersionedArchEntry};
+use crate::{pkg_info::VersionContent, version::Version, PkgOption, VersionedArchEntry};
 
-pub fn process_output(output: Output) -> anyhow::Result<(String, Version<'static>)> {
+pub fn process_output(
+    option: &PkgOption,
+    output: Output,
+) -> anyhow::Result<(Version<'static>, VersionContent<'static>)> {
     let string = String::from_utf8(output.stdout).context("Invalid utf-8 in output")?;
     let info =
         serde_json::from_str::<OutputVersionInfo>(&string).context("Failed to parse output")?;
 
     Ok((
-        info.version.to_string(),
+        Version::from_raw_str(Cow::Owned(info.version.to_owned()), option.strip_v_prefix),
         info.assets
             .iter()
             .map(|(k, v)| {
@@ -33,5 +36,5 @@ struct OutputVersionInfo<'a> {
     #[serde(borrow)]
     version: &'a str,
     #[serde(borrow)]
-    assets: Version<'a>,
+    assets: VersionContent<'a>,
 }
