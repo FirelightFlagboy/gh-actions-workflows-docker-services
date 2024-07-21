@@ -7,17 +7,15 @@
 //! | `TEST`    | The script is executed in test mode |
 //! | `TMP_DIR` | Path to a temporary folder          |
 
-use std::{
-    borrow::Cow,
-    ffi::OsStr,
-    path::Path,
-    process::{Command, Stdio},
-};
+use std::{borrow::Cow, ffi::OsStr, path::Path, process::Stdio};
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
+use tokio::process::Command;
 
-use crate::{version, ModeGetLatestVersion, PkgOption};
+use crate::{ModeGetLatestVersion, PkgOption};
+
+use super::VersionComponent;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -27,19 +25,12 @@ pub struct ReleaseHandler<'a> {
 }
 
 impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
-    fn get_latest_version(
+    async fn get_latest_version(
         &self,
-        option: &PkgOption,
+        _option: &PkgOption,
         tmp_dir: &Path,
         in_test_mode: bool,
-    ) -> anyhow::Result<
-        super::BoxedFuture<
-            anyhow::Result<(
-                version::Version<'static>,
-                crate::pkg_info::VersionContent<'static>,
-            )>,
-        >,
-    > {
+    ) -> anyhow::Result<VersionComponent> {
         let mut cmd = Command::new("bash");
 
         cmd.args(["-c", &self.command])
@@ -55,7 +46,7 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
         log::trace!("Configure the command: {cmd:#?}");
 
         log::info!("Executing the command ...");
-        let output = cmd.output().context("Spawning the process")?;
+        let output = cmd.output().await.context("Spawning the process")?;
 
         anyhow::ensure!(
             output.status.success(),
@@ -63,8 +54,6 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
             self.command
         );
 
-        let res = super::external_cmd::process_output(option, output);
-
-        Ok(Box::pin(futures::future::ready(res)))
+        super::external_cmd::process_output(output)
     }
 }

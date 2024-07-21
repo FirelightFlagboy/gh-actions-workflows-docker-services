@@ -33,7 +33,7 @@ fn main() -> anyhow::Result<()> {
 
     let fut = pkg_info
         .mode
-        .get_latest_version(&pkg_info.option, &args.tmp_dir, args.test)?;
+        .get_latest_version(&pkg_info.option, &args.tmp_dir, args.test);
 
     let tokio_runtime = tokio::runtime::Runtime::new()?;
     let (version, content) = tokio_runtime.block_on(fut)?;
