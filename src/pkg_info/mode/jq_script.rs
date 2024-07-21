@@ -5,7 +5,7 @@ use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
-use crate::ModeGetLatestVersion;
+use crate::{version::Version, ModeGetLatestVersion, PkgOption};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -18,16 +18,20 @@ pub struct ReleaseHandler<'a> {
 impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
     fn get_latest_version(
         &self,
+        option: &PkgOption,
         _tmp_dir: &Path,
         _in_test_mode: bool,
     ) -> anyhow::Result<
-        super::BoxedFuture<anyhow::Result<(String, crate::pkg_info::Version<'static>)>>,
+        super::BoxedFuture<
+            anyhow::Result<(Version<'static>, crate::pkg_info::VersionContent<'static>)>,
+        >,
     > {
         let document_url = self.document_url.clone();
         let script_path = self.script_path.to_path_buf();
         let http_client = crate::reqwest_utils::prepare_http_client_json()
             .build()
             .context("Failed to build http client")?;
+        let option = *option;
 
         let mut cmd = Command::new("jq");
         cmd.arg("--from-file")
@@ -69,7 +73,7 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
             let output = process.wait_with_output().await?;
 
             anyhow::ensure!(output.status.success(), "Jq command has failed");
-            super::external_cmd::process_output(output)
+            super::external_cmd::process_output(&option, output)
         }))
     }
 }

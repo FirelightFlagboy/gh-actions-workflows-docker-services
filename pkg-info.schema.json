@@ -33,6 +33,9 @@
         "jq-script"
       ]
     },
+    "strip_v_prefix": {
+      "type": "boolean"
+    },
     "name": {
       "type": "string"
     },
