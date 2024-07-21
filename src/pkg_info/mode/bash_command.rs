@@ -27,7 +27,7 @@ pub struct ReleaseHandler<'a> {
 impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
     async fn get_latest_version(
         &self,
-        option: &PkgOption,
+        _option: &PkgOption,
         tmp_dir: &Path,
         in_test_mode: bool,
     ) -> anyhow::Result<VersionComponent> {
@@ -54,6 +54,6 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
             self.command
         );
 
-        super::external_cmd::process_output(&option, output)
+        super::external_cmd::process_output(output)
     }
 }

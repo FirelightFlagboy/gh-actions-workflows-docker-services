@@ -14,7 +14,10 @@ pub use bash_command::ReleaseHandler as BashCmdReleaseHandler;
 pub use github::ReleaseHandler as GithubReleaseHandler;
 pub use jq_script::ReleaseHandler as JqScriptReleaseHandler;
 
-use crate::{version::Version, PkgOption};
+use crate::{
+    version::{RawVersion, Version},
+    PkgOption,
+};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case", tag = "mode")]
@@ -24,7 +27,7 @@ pub enum Mode<'a> {
     JqScript(#[serde(borrow)] jq_script::ReleaseHandler<'a>),
 }
 
-pub type VersionComponent = (Version<'static>, VersionContent<'static>);
+pub type VersionComponent = (RawVersion<'static>, VersionContent<'static>);
 
 impl<'a> Mode<'a> {
     pub async fn get_latest_version(
@@ -32,7 +35,7 @@ impl<'a> Mode<'a> {
         option: &PkgOption,
         tmp_dir: &Path,
         in_test_mode: bool,
-    ) -> anyhow::Result<VersionComponent> {
+    ) -> anyhow::Result<(Version<'static>, VersionContent<'static>)> {
         match self {
             Mode::GithubRelease(gh_release) => {
                 gh_release
@@ -50,6 +53,12 @@ impl<'a> Mode<'a> {
                     .await
             }
         }
+        .map(|(raw_version, content)| {
+            (
+                Version::from_raw(raw_version, option.strip_v_prefix),
+                content,
+            )
+        })
     }
 }
 

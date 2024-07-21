@@ -20,7 +20,7 @@ pub struct ReleaseHandler<'a> {
 impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
     async fn get_latest_version(
         &self,
-        option: &PkgOption,
+        _option: &PkgOption,
         _tmp_dir: &Path,
         _in_test_mode: bool,
     ) -> anyhow::Result<VersionComponent> {
@@ -67,6 +67,6 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
         let output = process.wait_with_output().await?;
 
         anyhow::ensure!(output.status.success(), "Jq command has failed");
-        super::external_cmd::process_output(&option, output)
+        super::external_cmd::process_output(output)
     }
 }

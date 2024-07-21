@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     pkg_info::{Arch, Digest, VersionContent, VersionedArchEntry},
-    version::Version,
+    version::RawVersion,
     PkgOption,
 };
 
@@ -21,7 +21,7 @@ pub struct ReleaseHandler<'a> {
 impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
     async fn get_latest_version(
         &self,
-        option: &PkgOption,
+        _option: &PkgOption,
         tmp_dir: &Path,
         in_test_mode: bool,
     ) -> anyhow::Result<VersionComponent> {
@@ -30,7 +30,7 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
         let http_client = build_http_client(&github_token)?;
 
         log::info!("Fetching latest release ...");
-        let raw_body = get_raw_latest_release(&http_client, &self.repository_path).await?;
+        let raw_body = get_raw_latest_release(&http_client, self.repository_path).await?;
         if in_test_mode {
             let path = tmp_dir.join("latest-release.json");
             log::trace!("Dump release json to {}", path.display());
@@ -59,10 +59,7 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
         log::trace!("Calculated checksums: {assets_with_checksum:#?}");
 
         Ok((
-            Version::from_raw_str(
-                Cow::Owned(latest_release.name.into()),
-                option.strip_v_prefix,
-            ),
+            RawVersion::from(Cow::Owned(latest_release.name.into())),
             VersionContent(assets_with_checksum),
         ))
     }
