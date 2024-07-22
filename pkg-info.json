@@ -1,7 +1,7 @@
 {
   "$schema": "./pkg-info.schema.json",
   "name": "Pkg Updater",
-  "latest_version": "2.0.1",
+  "latest_version": "2.1.0",
   "versions": {
     "0.0.2": {
       "amd64": {
@@ -50,6 +50,13 @@
         "filename": "pkg-info-updater-linux-amd64",
         "download_url": "https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/releases/download/v2.0.1/pkg-info-updater-linux-amd64",
         "digest": "sha512:c39c05e1b26e186a3695d40f11afb413a07a7595a7475bae96d3d34c73b406b2625d30fd6c5f7bde615caea9e7e66cf38bb4eaff7e120a81d7b48ca5856e657b"
+      }
+    },
+    "2.1.0": {
+      "amd64": {
+        "filename": "pkg-info-updater-linux-amd64",
+        "download_url": "https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/releases/download/v2.1.0/pkg-info-updater-linux-amd64",
+        "digest": "sha512:d3a506de98e9ce950e3accb6165aea29c136e0943cb6c2a2c094a0ce1d5dc9dd41be2c2cf02f478e6c83e1c139ef8fe5e0b173a7b6683721816e803e4e34e9dd"
       }
     }
   },
