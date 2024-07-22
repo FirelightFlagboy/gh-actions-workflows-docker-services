@@ -43,16 +43,7 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
             release.assets.len()
         );
 
-        let assets = release
-            .assets
-            .into_iter()
-            .filter_map(|asset| {
-                self.arch_asset_patterns
-                    .iter()
-                    .find(|(_arch, pattern)| pattern.is_match(&asset.name))
-                    .map(|(arch, _pattern)| (*arch, asset))
-            })
-            .collect::<HashMap<Arch, GithubAsset>>();
+        let assets = self.get_assets_for_arch(release.assets);
         log::debug!("Collected assets: {assets:#?}");
         log::info!("Calculating checksum for {} asset(s) ...", assets.len());
         let assets_with_checksum = get_checksum_for_assets(&http_client, assets).await?;
@@ -62,6 +53,23 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
             RawVersion::from(release.name),
             VersionContent(assets_with_checksum),
         ))
+    }
+}
+
+impl<'a> ReleaseHandler<'a> {
+    fn get_assets_for_arch<'b>(
+        &self,
+        assets: Vec<GithubAsset<'b>>,
+    ) -> HashMap<Arch, GithubAsset<'b>> {
+        self.arch_asset_patterns
+            .iter()
+            .filter_map(|(arch, pattern)| {
+                assets
+                    .iter()
+                    .find(|asset| pattern.is_match(&asset.name))
+                    .map(|asset| (*arch, asset.clone()))
+            })
+            .collect()
     }
 }
 
@@ -327,7 +335,8 @@ impl GithubRelease<'_> {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct GithubAsset<'a> {
     #[serde(borrow)]
     name: Cow<'a, str>,
@@ -352,5 +361,65 @@ impl<'a> Debug for GithubAsset<'a> {
             .field("size", &self.size)
             .field("browser_download_url", &self.browser_download_url.as_str())
             .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_get_asset_for_arch() {
+        let wanted_asset = GithubAsset {
+            name: "asset.foo".into(),
+            size: 0,
+            browser_download_url: "http://asset.com".parse().unwrap(),
+        };
+        let assets = vec![
+            wanted_asset.clone(),
+            GithubAsset {
+                name: "asset.bar".into(),
+                size: 0,
+                browser_download_url: "http://asset.com".parse().unwrap(),
+            },
+        ];
+        let handler = ReleaseHandler {
+            repository_path: "",
+            arch_asset_patterns: ArchAssetPattern::from_iter(vec![(
+                Arch::Amd64,
+                regex::Regex::new(r"asset\.foo").unwrap(),
+            )]),
+        };
+
+        let got_asset = handler.get_assets_for_arch(assets);
+
+        assert_eq!(got_asset.len(), 1);
+        assert_eq!(got_asset.get(&Arch::Amd64), Some(&wanted_asset));
+    }
+
+    #[test]
+    // https://github.com/FirelightFlagboy/gh-actions-workflows-docker-services/issues/53
+    fn can_use_same_asset_on_different_arch() {
+        let foo_asset = GithubAsset {
+            name: "asset.foo".into(),
+            size: 0,
+            browser_download_url: "http://asset.com".parse().unwrap(),
+        };
+        let assets = vec![foo_asset.clone()];
+        let handler = ReleaseHandler {
+            repository_path: "",
+            arch_asset_patterns: ArchAssetPattern::from_iter(vec![
+                (Arch::Amd64, regex::Regex::new(r"asset\.foo").unwrap()),
+                (Arch::Arm64, regex::Regex::new(r"asset\.foo").unwrap()),
+            ]),
+        };
+
+        let got_asset = handler.get_assets_for_arch(assets);
+
+        assert_eq!(got_asset.len(), 2);
+        assert_eq!(
+            got_asset,
+            HashMap::from_iter([(Arch::Amd64, foo_asset.clone()), (Arch::Arm64, foo_asset),])
+        );
     }
 }

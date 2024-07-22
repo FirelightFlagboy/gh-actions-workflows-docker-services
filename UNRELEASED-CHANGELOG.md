@@ -9,3 +9,7 @@
 
   Setting it to `true` will allow `github-release` mode to use release mark as `prerelease`.
   For `bash_command` and `jq_script` the env variable `ALLOW_PRERELEASE=1` is exported.
+
+### Fixes
+
+- Fix missing artifact when shared between multiple architectures (#53)
