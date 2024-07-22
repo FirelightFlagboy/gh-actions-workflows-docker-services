@@ -50,17 +50,25 @@ jobs:
 
       - name: Download pkg-info-updater
         run: |
+          pwd
           wget -O ${{ steps.pkg.outputs.filename }} ${{ steps.pkg.outputs.download_url }}
           echo "${{ steps.pkg.outputs.sha512 }} ${{ steps.pkg.outputs.filename }}" > pkg-info-updater.sha512
           sha512sum -c pkg-info-updater.sha512
           chmod +x ${{ steps.pkg.outputs.filename }}
-        working-directory: ${{ runner.temp }}
 
       - name: Update ${{ inputs.pkg-info-path }}
-        run: >-
-          ${{ runner.temp }}/${{ steps.pkg.outputs.filename }}
-          --file=${{ inputs.pkg-info-path }}
-          --tmp-dir=${{ runner.temp }}
+        run: |
+          set -x
+          test -x ${{ steps.pkg.outputs.filename }}
+          test -f ${{ inputs.pkg-info-path }}
+          test -d ${{ runner.temp }}
+          ls -l ./${{ steps.pkg.outputs.filename }}
+          file ${{ steps.pkg.outputs.filename }}
+          ldd ${{ steps.pkg.outputs.filename }}
+
+          ./${{ steps.pkg.outputs.filename }} \
+            --file=${{ inputs.pkg-info-path }} \
+            --tmp-dir=${{ runner.temp }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
