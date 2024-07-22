@@ -9,8 +9,7 @@
 
 ## 2.0.1 (2024-07-03)
 
-
-- Bump internal github actions
+- Bump internal GitHub actions
 - Bump rust dependencies
 - Update internal release script
 
