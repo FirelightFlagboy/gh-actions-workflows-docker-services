@@ -3,6 +3,18 @@ set -eu -o pipefail
 OS=linux
 ARCH=amd64
 
+# Skip signed git commit and push.
+SKIP_SIGN=${SKIP_SIGN:-0}
+SKIP_ARTIFACT_UPLOAD=${SKIP_ARTIFACT_UPLOAD:-0}
+
+if [ $SKIP_SIGN -eq 1 ]; then
+  COMMIT_SIGN_ARGS="--no-gpg-sign"
+  TAG_SIGN_ARGS="--no-sign"
+else
+  COMMIT_SIGN_ARGS="--gpg-sign"
+  TAG_SIGN_ARGS="--sign"
+fi
+
 SCRIPTDIR=${SCRIPTDIR:=$(dirname $(realpath -s "$0"))}
 ROOTDIR=${ROOTDIR:=$(realpath -s "$SCRIPTDIR/../../..")}
 SKIP_RELEASE_CREATION=${SKIP_RELEASE_CREATION:-0}
@@ -79,12 +91,12 @@ function commit_file_for_release {
     CHANGELOG.md UNRELEASED-CHANGELOG.md \
     .github/workflows/docker-build-publish.yml \
     .github/workflows/update-pkg-info.yml
-  git commit --signoff --gpg-sign -m "Prepare for release $NEW_VERSION"
+  git commit --signoff $COMMIT_SIGN_ARGS -m "Prepare for release $NEW_VERSION"
 }
 
 function create_tag {
   echo "Create tag"
-  git tag --sign "v$NEW_VERSION" --message="Release version $NEW_VERSION"
+  git tag $TAG_SIGN_ARGS "v$NEW_VERSION" --message="Release version $NEW_VERSION"
 }
 
 function push_change {
@@ -94,7 +106,14 @@ function push_change {
 
 function create_release_with_artifact {
   echo "Create github release"
-  cp target/release/pkg-info-updater /tmp/pkg-info-updater-$OS-$ARCH
+
+  if [ $SKIP_ARTIFACT_UPLOAD -ne 0 ]; then
+    echo "SKIP_ARTIFACT_UPLOAD set, skipping artifact upload"
+    local ASSETS=""
+  else
+    cp target/release/pkg-info-updater /tmp/pkg-info-updater-$OS-$ARCH
+    local ASSETS="/tmp/pkg-info-updater-$OS-$ARCH"
+  fi
 
   gh release create "v$NEW_VERSION" \
     --title "$NEW_VERSION" \
@@ -102,7 +121,7 @@ function create_release_with_artifact {
     --notes-file $1 \
     --latest \
     --verify-tag \
-    "/tmp/pkg-info-updater-$OS-$ARCH"
+    $ASSETS
 }
 
 build_new_version_for_bin

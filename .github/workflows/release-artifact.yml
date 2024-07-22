@@ -1,0 +1,43 @@
+name: Build release artifact
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Setup rust cache
+        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
+        with:
+          cache-on-failure: true
+          shared-key: release
+        timeout-minutes: 5
+
+      - name: Pre-compile
+        run: cargo build --release
+        timeout-minutes: 10
+
+      - name: Rename artifact
+        run: ln target/release/pkg-info-updater /tmp/pkg-info-updater-$OS-$ARCH
+        env:
+          OS: linux
+          ARCH: amd64
+
+      - name: Upload asset
+        run: |
+          set -x
+          gh release upload ${GITHUB_REF#refs/tags/} /tmp/pkg-info-updater-$OS-$ARCH
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OS: linux
+          ARCH: amd64
