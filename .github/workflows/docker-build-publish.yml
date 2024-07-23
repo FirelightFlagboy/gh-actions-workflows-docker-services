@@ -49,7 +49,7 @@ jobs:
 
       - name: Determine pkg version to use
         id: pkg-vers
-        uses: FirelightFlagboy/gh-actions-workflows-docker-services/.github/actions/pkg-version-to-use@v2.1.0
+        uses: FirelightFlagboy/gh-actions-workflows-docker-services/.github/actions/pkg-version-to-use@v2.1.1
         with:
           pkg-file: ${{ inputs.pkg-file }}
           pkg-version: ${{ inputs.pkg-version }}
