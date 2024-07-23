@@ -8,6 +8,8 @@ on:
 
 jobs:
   build:
+    # Disable since we have build isolation with docker
+    if: false
     runs-on: ubuntu-24.04
     permissions:
       contents: write

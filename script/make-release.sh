@@ -6,6 +6,7 @@ ARCH=amd64
 # Skip signed git commit and push.
 SKIP_SIGN=${SKIP_SIGN:-0}
 SKIP_ARTIFACT_UPLOAD=${SKIP_ARTIFACT_UPLOAD:-0}
+BUILD_IN_DOCKER=${BUILD_IN_DOCKER:-0}
 
 if [ $SKIP_SIGN -eq 1 ]; then
   COMMIT_SIGN_ARGS="--no-gpg-sign"
@@ -16,7 +17,7 @@ else
 fi
 
 SCRIPTDIR=${SCRIPTDIR:=$(dirname $(realpath -s "$0"))}
-ROOTDIR=${ROOTDIR:=$(realpath -s "$SCRIPTDIR/../../..")}
+ROOTDIR=${ROOTDIR:=$(realpath -s "$SCRIPTDIR/..")}
 SKIP_RELEASE_CREATION=${SKIP_RELEASE_CREATION:-0}
 
 NEW_VERSION=${1:?Missing new version}
@@ -36,7 +37,26 @@ function build_new_version_for_bin {
   echo "Building bin for $NEW_VERSION"
   sed -i "s/^version = \".*\"$/version = \"$NEW_VERSION\"/" Cargo.toml
 
-  cargo build --release
+  cargo check # Update lock with updated version
+
+  if [ $BUILD_IN_DOCKER -eq 1 ]; then
+    DOCKER_WORKING_DIR=/tmp
+
+    RUST_VERSION=$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)
+    sed -i "s/^FROM rust:.*$/FROM rust:$RUST_VERSION-slim/" $SCRIPTDIR/build.dockerfile
+
+    # Build docker image
+    docker build -t rust-builder -f $SCRIPTDIR/build.dockerfile .
+
+    # Build in docker
+    docker run --rm --name rust-builder \
+      --mount type=bind,source=$ROOTDIR/target/release/pkg-info-updater,target=/tmp/result/pkg-info-updater \
+      rust-builder \
+      cp -v /tmp/build/target/release/pkg-info-updater /tmp/result/pkg-info-updater
+      # cargo build --release
+  else
+    cargo build --release
+  fi
 }
 
 function add_new_version_to_pkg_file {
@@ -90,7 +110,8 @@ function commit_file_for_release {
     Cargo.toml Cargo.lock \
     CHANGELOG.md UNRELEASED-CHANGELOG.md \
     .github/workflows/docker-build-publish.yml \
-    .github/workflows/update-pkg-info.yml
+    .github/workflows/update-pkg-info.yml \
+    $SCRIPTDIR/build.dockerfile
   git commit --signoff $COMMIT_SIGN_ARGS -m "Prepare for release $NEW_VERSION"
 }
 
