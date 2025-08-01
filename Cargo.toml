@@ -8,17 +8,17 @@ anyhow = { version = "1.0.98", default-features = false, features = ["std"] }
 clap = { version = "4.5.13", default-features = false, features = ["std", "color", "help", "usage", "error-context", "suggestions", "derive"] }
 env_logger = { version = "0.11.6", default-features = false, features = ["auto-color", "color", "humantime"] }
 log = { version = "0.4.27", default-features = false }
-reqwest = { version = "0.12.21", default-features = false, features = ["default-tls", "stream", "gzip"] }
+reqwest = { version = "0.12.22", default-features = false, features = ["default-tls", "stream", "gzip"] }
 serde = { version = "1.0.219", default-features = false, features = ["std", "derive"] }
 url = { version = "2.5.4", default-features = false, features = ["serde"] }
-serde_json = { version = "1.0.140", default-features = false, features = ["std", "preserve_order"] }
+serde_json = { version = "1.0.142", default-features = false, features = ["std", "preserve_order"] }
 thiserror = { version = "2.0.12", default-features = false }
 futures = { version = "0.3.31", default-features = false, features = ["std"] }
 itertools = { version = "0.14.0", default-features = false, features = ["use_std"] }
-tokio = { version = "1.45.1", default-features = false, features = ["rt", "rt-multi-thread", "process", "io-util"] }
+tokio = { version = "1.47.0", default-features = false, features = ["rt", "rt-multi-thread", "process", "io-util"] }
 sha2 = { version = "0.10.9", default-features = false, features = ["std"] }
 regex = { version = "1.11.1", default-features = false, features = ["std", "perf"] }
 tokio-util = { version = "0.7.15", default-features = false, features = ["io"] }
 
 [dev-dependencies]
-rstest = { version = "0.25.0", default-features = false }
+rstest = { version = "0.26.1", default-features = false }
