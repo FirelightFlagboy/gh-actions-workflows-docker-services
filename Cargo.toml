@@ -41,7 +41,7 @@ futures = { version = "0.3.32", default-features = false, features = ["std"] }
 itertools = { version = "0.14.0", default-features = false, features = [
   "use_std",
 ] }
-tokio = { version = "1.49.0", default-features = false, features = [
+tokio = { version = "1.50.0", default-features = false, features = [
   "rt",
   "rt-multi-thread",
   "process",
