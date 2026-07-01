@@ -45,9 +45,7 @@ impl<'a> ModeGetLatestVersion for ReleaseHandler<'a> {
             "Invalid response status"
         );
         let mut document_reader = tokio_util::io::StreamReader::new(
-            document_resp
-                .bytes_stream()
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e)),
+            document_resp.bytes_stream().map_err(std::io::Error::other),
         );
 
         log::info!("Spawning jq command ...");
