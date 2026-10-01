@@ -55,4 +55,4 @@ regex = { version = "1.12.3", default-features = false, features = [
 tokio-util = { version = "0.7.18", default-features = false, features = ["io"] }
 
 [dev-dependencies]
-rstest = { version = "0.26.1", default-features = false }
+rstest = { version = "0.27.0", default-features = false }
